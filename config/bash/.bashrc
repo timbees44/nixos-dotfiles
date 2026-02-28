@@ -67,6 +67,9 @@ if command -v eza &> /dev/null; then
 fi
 
 alias ff="fzf --preview 'bat --style=numbers --color=always {}'"
+alias nrs='sudo nixos-rebuild switch --flake ~/nixos-dotfiles#nixos'
+alias vi='nvim'
+alias vim='nvim'
 
 if command -v zoxide &> /dev/null; then
   alias cd="zd"

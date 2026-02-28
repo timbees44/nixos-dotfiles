@@ -1,0 +1,28 @@
+clock
+# Date format: Tue, 25 Jun
+datestr=%a, %d %b
+font=JetBrainsMono Nerd Font
+image=/home/tim/pictures/walls/tokyonight-lock.jpg
+indicator
+indicator-radius=160
+indicator-thickness=12
+inside-color=1a1b26dd
+inside-clear-color=1a1b26dd
+inside-ver-color=1a1b26dd
+line-color=00000000
+ring-color=7aa2f7ff
+ring-clear-color=7dcfffaa
+ring-ver-color=7aa2f7ff
+ring-wrong-color=f7768eff
+text-color=c0caf5ff
+text-clear-color=c0caf5ff
+text-ver-color=c0caf5ff
+text-wrong-color=f7768eff
+key-hl-color=bb9af7ff
+bs-hl-color=f7768eff
+separator-color=00000000
+grace=0
+fade-in=0
+effect-blur=4x2
+scaling=fill
+color=00000000

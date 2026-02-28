@@ -47,7 +47,11 @@ return {
 		"nvim-treesitter/nvim-treesitter",
 		build = ":TSUpdate",
 		config = function()
-			require("nvim-treesitter.configs").setup({
+			local ok, configs = pcall(require, "nvim-treesitter.configs")
+			if not ok then
+				configs = require("nvim-treesitter.config")
+			end
+			configs.setup({
 				-- Specify the languages you want installed
 				ensure_installed = {
 					"lua",
