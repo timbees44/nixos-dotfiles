@@ -25,6 +25,8 @@
         "custom/sep",
         "disk",
         "custom/sep",
+        "custom/battery",
+        "custom/sep",
         "clock",
         "custom/sep",
         "tray"
@@ -67,17 +69,11 @@
         "path": "/",
         "format": "Disk: {free}"
     },
-    "battery": {
-        "states": {
-            "good": 95,
-            "warning": 30,
-            "critical": 15
-        },
-        "format": "Bat: {capacity}% {icon} {time}",
-        "format-plugged": "{capacity}% ",
-        "format-alt": "Bat {capacity}%",
-        "format-time": "{H}:{M}",
-        "format-icons": ["", "", "", "", ""]
+    "custom/battery": {
+        "exec": "/home/tim/.config/waybar/battery_status.sh",
+        "interval": 30,
+        "format": "Bat: {}",
+        "exec-if": "bash -lc \"compgen -G '/sys/class/power_supply/BAT*' >/dev/null\""
     },
     "network": {
         "format": "Online",
