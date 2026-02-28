@@ -16,5 +16,13 @@ config.window_background_opacity = 0.9
 -- Window bar
 config.window_decorations = "RESIZE"
 
+-- Remove default padding so the prompt hugs the top edge
+config.window_padding = {
+  left = 0,
+  right = 0,
+  top = 0,
+  bottom = 0,
+}
+
 -- and finally, return the configuration to wezterm
 return config

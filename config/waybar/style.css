@@ -50,7 +50,7 @@ button:hover {
 
 #clock,
 #custom-sep,
-#battery,
+#custom-battery,
 #cpu,
 #memory,
 #disk,
@@ -69,7 +69,7 @@ button:hover {
     border-bottom: 4px solid @cyn;
 }
 
-#battery {
+#custom-battery {
     color: @mag;
     border-bottom: 4px solid @mag;
 }
@@ -101,4 +101,3 @@ button:hover {
 #tray {
     background-color: #2980b9;
 }
-

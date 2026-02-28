@@ -30,6 +30,12 @@ in
       vi = "nvim";
       vim = "nvim";
     };
+    bashrcExtra = ''
+      # Load handcrafted interactive configuration (starship, aliases, etc.)
+      if [ -f "${dotfiles}/bash/.bashrc" ]; then
+        source "${dotfiles}/bash/.bashrc"
+      fi
+    '';
     profileExtra = ''
       if [ -z "$WAYLAND_DISPLAY" ] && [ "$XDG_VTNR" = 1 ]; then
         exec uwsm start -S hyprland-uwsm.desktop
@@ -118,6 +124,7 @@ in
     pcmanfm
     ripgrep
     starship
+    tmux
     tree
     waybar
     wezterm
