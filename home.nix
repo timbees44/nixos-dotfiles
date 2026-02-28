@@ -6,7 +6,7 @@ let
   configs = {
     hypr = "hypr";
     nvim = "nvim";
-    wofi = "wofi";
+    rofi = "rofi";
     waybar = "waybar";
   };
 in
@@ -17,7 +17,7 @@ in
 
   home.username = "tim";
   home.homeDirectory = "/home/tim";
-  home.stateVersion = "25.11";
+  home.stateVersion = "24.05";
   programs.bash = {
     enable = true;
     shellAliases = {
@@ -33,13 +33,20 @@ in
   };
 
   home.packages = with pkgs; [
-    neovim
-    ripgrep
-    nixpkgs-fmt
+    codex
+    foot
     gcc
-    wofi
+    hyprpaper
+    kitty
+    neovim
     nitch
+    nixpkgs-fmt
+    opencode
     pcmanfm
+    ripgrep
+    tree
+    waybar
+    wofi
     (pkgs.writeShellApplication {
       name = "ns";
       runtimeInputs = with pkgs; [

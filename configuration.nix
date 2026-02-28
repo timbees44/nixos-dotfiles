@@ -30,9 +30,6 @@
   users.users.tim = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
-    packages = with pkgs; [
-      tree
-    ];
   };
 
   programs.firefox.enable = true;
@@ -41,14 +38,6 @@
     vim
     git
     wget
-    wofi
-    foot
-    kitty
-    neovim
-    waybar
-    codex
-    opencode
-    hyprpaper
   ];
 
   fonts.packages = with pkgs; [
@@ -57,6 +46,6 @@
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  system.stateVersion = "25.11";
+  system.stateVersion = "24.05";
 
 }
