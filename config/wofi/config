@@ -1,5 +1,5 @@
 show=drun
-term=kitty
+term=wezterm
 prompt=Search …
 insensitive=true
 hide_scroll=true

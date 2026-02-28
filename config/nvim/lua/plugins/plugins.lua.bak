@@ -1,0 +1,53 @@
+return {
+
+	{ "nvim-lua/plenary.nvim" },
+
+	{
+		"nvim-telescope/telescope.nvim",
+		dependencies = { "nvim-lua/plenary.nvim" },
+	},
+
+	{
+		"nvim-treesitter/nvim-treesitter",
+		build = ":TSUpdate",
+	},
+
+	-- LSP Config
+	{
+		"neovim/nvim-lspconfig",
+	},
+
+	-- Mason for automatic server installation
+	{
+		"williamboman/mason.nvim",
+		build = ":MasonUpdate",
+		config = true,
+	},
+
+	-- Mason + LSP bridge
+	{
+		"williamboman/mason-lspconfig.nvim",
+		dependencies = {
+			"neovim/nvim-lspconfig",
+			"williamboman/mason.nvim",
+		},
+		config = function()
+			local mason_lspconfig = require("mason-lspconfig")
+
+			-- List of servers
+			local servers = { "pyright", "lua_ls" }
+
+			mason_lspconfig.setup({
+				ensure_installed = servers,
+			})
+
+			-- Hook Mason servers into LSP setup
+			mason_lspconfig.setup_handlers({
+				function(server)
+					vim.lsp.config[server].setup({})
+				end,
+			})
+		end,
+	},
+
+}

@@ -5,10 +5,14 @@ let
   tokyoNightLock = "${config.home.homeDirectory}/pictures/walls/tokyonight-lock.jpg";
 
   configs = {
+    doom = "doom";
     hypr = "hypr";
     nvim = "nvim";
-    rofi = "rofi";
+    starship = "starship";
+    tmux = "tmux";
     waybar = "waybar";
+    wezterm = "wezterm";
+    wofi = "wofi";
   };
 in
 {
@@ -100,20 +104,26 @@ in
   };
 
   home.packages = with pkgs; [
+    bat
     codex
+    eza
     foot
+    fzf
     gcc
     hyprpaper
-    kitty
     neovim
     nitch
     nixpkgs-fmt
     opencode
     pcmanfm
     ripgrep
+    starship
     tree
     waybar
+    wezterm
     wofi
+    zoxide
+    emacs
     (pkgs.writeShellApplication {
       name = "ns";
       runtimeInputs = with pkgs; [
