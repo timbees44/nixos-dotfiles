@@ -40,6 +40,20 @@
     wget
   ];
 
+  powerManagement = {
+    enable = true;
+    powertop.enable = true;
+  };
+  services.power-profiles-daemon.enable = true;
+
+  services.logind = {
+    lidSwitch = "suspend";
+    lidSwitchExternalPower = "ignore";
+    lidSwitchDocked = "ignore";
+  };
+
+  security.pam.services.swaylock = {};
+
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
   ];
