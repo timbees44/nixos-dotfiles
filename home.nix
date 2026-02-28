@@ -32,6 +32,13 @@ in
     '';
   };
 
+  programs.gpg.enable = true;
+  services.gpg-agent = {
+    enable = true;
+    enableSshSupport = true;
+    pinentryPackage = pkgs.pinentry-gnome3;
+  };
+
   home.packages = with pkgs; [
     codex
     foot
