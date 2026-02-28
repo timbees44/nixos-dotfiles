@@ -2,7 +2,7 @@
 let
   dotfiles = "${config.home.homeDirectory}/nixos-dotfiles/config";
   create_symlink = path: config.lib.file.mkOutOfStoreSymlink path;
-  tokyoNightLock = "${config.home.homeDirectory}/walls/tokyonight-lock.png";
+  tokyoNightLock = "${config.home.homeDirectory}/pictures/walls/tokyonight-lock.jpg";
 
   configs = {
     hypr = "hypr";
@@ -53,7 +53,6 @@ in
       "indicator-thickness" = 12;
       "inside-color" = "1a1b26dd";
       "inside-clear-color" = "1a1b26dd";
-      "inside-auth-color" = "1a1b26dd";
       "inside-ver-color" = "1a1b26dd";
       "line-color" = "00000000";
       "ring-color" = "7aa2f7ff";
@@ -67,9 +66,9 @@ in
       "key-hl-color" = "bb9af7ff";
       "bs-hl-color" = "f7768eff";
       "separator-color" = "00000000";
-      "grace" = 2;
-      "fade-in" = 0.15;
-      "effect-blur" = "8x5";
+      "grace" = 0;
+      "fade-in" = 0;
+      "effect-blur" = "4x2";
       scaling = "fill";
       color = "00000000";
     };
@@ -134,7 +133,7 @@ in
     })
     configs;
 
-  home.file."walls/.keep" = {
+  home.file."pictures/walls/.keep" = {
     text = "";
   };
 
