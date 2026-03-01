@@ -38,6 +38,10 @@
     vim
     git
     wget
+    cmake
+    gnumake
+    gcc
+    pkg-config
   ];
 
   powerManagement = {

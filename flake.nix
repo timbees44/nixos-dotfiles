@@ -7,9 +7,13 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    doomemacs = {
+      url = "github:doomemacs/doomemacs";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }: {
+  outputs = inputs@{ self, nixpkgs, home-manager, ... }: {
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       modules = [
         ./configuration.nix
@@ -20,6 +24,9 @@
             useUserPackages = true;
             users.tim = import ./home.nix;
             backupFileExtension = "backup";
+            extraSpecialArgs = {
+              inherit (inputs) doomemacs;
+            };
           };
           systemd.services."home-manager-tim".serviceConfig.Environment = [
             "XDG_RUNTIME_DIR=/run/user/1000"
