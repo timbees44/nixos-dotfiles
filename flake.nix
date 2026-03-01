@@ -13,26 +13,46 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, ... }: {
-    nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
-      modules = [
-        ./configuration.nix
-        home-manager.nixosModules.home-manager
-        {
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            users.tim = import ./home.nix;
-            backupFileExtension = "backup";
-            extraSpecialArgs = {
-              inherit (inputs) doomemacs;
-            };
-          };
-          systemd.services."home-manager-tim".serviceConfig.Environment = [
-            "XDG_RUNTIME_DIR=/run/user/1000"
+  outputs = inputs@{ self, nixpkgs, home-manager, doomemacs, ... }:
+    let
+      inherit (nixpkgs.lib) nixosSystem;
+      mkHost = { modules, hmConfig ? null, system ? "x86_64-linux" }:
+        nixosSystem {
+          inherit system;
+          modules =
+            modules
+            ++ (if hmConfig == null then [ ] else [
+              home-manager.nixosModules.home-manager
+              {
+                home-manager = {
+                  useGlobalPkgs = true;
+                  useUserPackages = true;
+                  users.tim = import hmConfig;
+                  backupFileExtension = "backup";
+                  extraSpecialArgs = {
+                    inherit doomemacs;
+                  };
+                };
+                systemd.services."home-manager-tim".serviceConfig.Environment = [
+                  "XDG_RUNTIME_DIR=/run/user/1000"
+                ];
+              }
+            ]);
+        };
+    in {
+      nixosConfigurations = {
+        laptop = mkHost {
+          modules = [
+            ./hosts/laptop/default.nix
           ];
-        }
-      ];
+          hmConfig = ./homes/laptop.nix;
+        };
+
+        server = mkHost {
+          modules = [
+            ./hosts/server/default.nix
+          ];
+        };
+      };
     };
-  };
 }
