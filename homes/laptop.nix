@@ -60,9 +60,10 @@ in
 
   home.packages = with pkgs; [
     bat
-		btop
-		cmake
+			btop
+			cmake
     codex
+    brave
     emacs
     eza
     foot

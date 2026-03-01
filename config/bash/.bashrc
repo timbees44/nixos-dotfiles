@@ -67,7 +67,7 @@ if command -v eza &> /dev/null; then
 fi
 
 alias ff="fzf --preview 'bat --style=numbers --color=always {}'"
-alias nrs='sudo nixos-rebuild switch --flake ~/nixos-dotfiles#nixos'
+alias nrl='sudo nixos-rebuild switch --flake ~/nixos-dotfiles#laptop'
 alias vi='nvim'
 alias vim='nvim'
 
