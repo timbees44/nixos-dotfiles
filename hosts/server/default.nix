@@ -75,6 +75,9 @@ in
 
   environment.systemPackages = with pkgs; [
     dnsutils
+    git
+    networkmanager
+    vim
   ];
 
   system.stateVersion = "24.05";
