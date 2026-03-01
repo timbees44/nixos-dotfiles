@@ -1,6 +1,6 @@
 { config, pkgs, ... }:
 let
-  lanInterface = "enp3s0"; # adjust if your NIC name differs
+  lanInterface = "wlp59s0"; # adjust to your wireless NIC
 in
 {
   imports = [
