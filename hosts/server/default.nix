@@ -13,6 +13,7 @@ in
   networking = {
     hostName = "server";
     useDHCP = false;
+    networkmanager.enable = true;
     interfaces.${lanInterface}.ipv4.addresses = [
       { address = "192.168.1.67"; prefixLength = 24; }
       { address = "192.168.1.94"; prefixLength = 24; }
