@@ -1,7 +1,8 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, doomemacs, ... }:
 let
   dotfiles = "${config.home.homeDirectory}/nixos-dotfiles/config";
   create_symlink = path: config.lib.file.mkOutOfStoreSymlink path;
+  doomDir = "${config.home.homeDirectory}/.emacs.d";
 
   configs = {
     doom = "doom";
@@ -59,11 +60,15 @@ in
 
   home.packages = with pkgs; [
     bat
+		btop
+		cmake
     codex
+    emacs
     eza
     foot
     fzf
     gcc
+    gnumake
     hyprpaper
     neovim
     nitch
@@ -79,7 +84,6 @@ in
     wezterm
     wofi
     zoxide
-    emacs
     (pkgs.writeShellApplication {
       name = "ns";
       runtimeInputs = with pkgs; [
@@ -110,5 +114,26 @@ in
   home.file."pictures/walls/.keep" = {
     text = "";
   };
+
+  home.activation.doomInstall = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    doomSrc=${lib.escapeShellArg doomemacs}
+    doomDest=${lib.escapeShellArg doomDir}
+    mkdir -p "$doomDest"
+    ${pkgs.rsync}/bin/rsync -a --delete \
+      --chmod=Du+rwx,Fu+rw \
+      --exclude='.local/' \
+      "$doomSrc"/ "$doomDest"/
+    for d in .local .local/etc .local/cache .local/state; do
+      install -d -m 700 "$doomDest/$d"
+    done
+  '';
+
+  home.activation.doomSync = lib.hm.dag.entryAfter [ "doomInstall" ] ''
+    doomBin="${doomDir}/bin/doom"
+    if [ -x "$doomBin" ]; then
+      export PATH=${lib.makeBinPath [ pkgs.emacs pkgs.git pkgs.gnutar pkgs.gzip pkgs.coreutils ]}:$PATH
+      "$doomBin" sync || true
+    fi
+  '';
 
 }
