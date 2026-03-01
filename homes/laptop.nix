@@ -18,7 +18,7 @@ let
 in
 {
   imports = [
-    ./modules/theme.nix
+    ../modules/theme.nix
   ];
 
   home.username = "tim";
@@ -51,7 +51,7 @@ in
         command = "${pkgs.swaylock-effects}/bin/swaylock -f";
       }
       {
-        timeout = 600;
+        timeout = 310;
         command = "${pkgs.hyprland}/bin/hyprctl dispatch dpms off";
         resumeCommand = "${pkgs.hyprland}/bin/hyprctl dispatch dpms on";
       }

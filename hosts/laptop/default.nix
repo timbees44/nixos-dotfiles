@@ -42,6 +42,7 @@
     gnumake
     gcc
     pkg-config
+    libtool
   ];
 
   powerManagement = {
