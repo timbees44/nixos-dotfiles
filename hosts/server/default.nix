@@ -13,7 +13,8 @@ in
     domain = "lan";
     mediaDir = "/srv/media";
     timezone = "Europe/London";
-    bindAddress = "127.0.0.1";
+    serviceAddress = "0.0.0.0";
+    proxyAddress = "127.0.0.1";
   };
 
   boot.loader.systemd-boot.enable = true;
@@ -46,7 +47,20 @@ in
     };
     firewall = {
       enable = true;
-      allowedTCPPorts = [ 22 53 80 443 ];
+      allowedTCPPorts = [
+        22 53 80 443
+        8096 # jellyfin
+        7878 # radarr
+        8989 # sonarr
+        8686 # lidarr
+        6767 # bazarr
+        9696 # prowlarr
+        8080 # sabnzbd
+        8384 # syncthing UI
+        13378 # audiobookshelf
+        8083 # calibre
+        2283 # immich
+      ];
       allowedUDPPorts = [ 53 ];
     };
   };
