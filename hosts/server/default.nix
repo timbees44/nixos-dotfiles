@@ -7,6 +7,15 @@ in
     ./hardware-configuration.nix
   ];
 
+  services.homelab = {
+    enable = true;
+    user = "tim";
+    domain = "lan";
+    mediaDir = "/srv/media";
+    timezone = "Europe/London";
+    bindAddress = "127.0.0.1";
+  };
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -21,12 +30,24 @@ in
     defaultGateway = "192.168.1.1";
     nameservers = [ "192.168.1.1" "1.1.1.1" ];
     hosts = {
-      "192.168.1.67" = [ "jellyfin.lan" "media.lan" ];
+      "192.168.1.67" = [
+        "jellyfin.lan"
+        "radarr.lan"
+        "sonarr.lan"
+        "lidarr.lan"
+        "bazarr.lan"
+        "prowlarr.lan"
+        "sabnzbd.lan"
+        "syncthing.lan"
+        "audiobookshelf.lan"
+        "calibre.lan"
+      ];
       "192.168.1.94" = [ "immich.lan" "photos.lan" ];
     };
     firewall = {
       enable = true;
-      allowedTCPPorts = [ 22 8096 8920 2283 ];
+      allowedTCPPorts = [ 22 53 80 443 ];
+      allowedUDPPorts = [ 53 ];
     };
   };
 
@@ -38,39 +59,24 @@ in
       address = [
         "/jellyfin.lan/192.168.1.67"
         "/immich.lan/192.168.1.94"
+        "/radarr.lan/192.168.1.67"
+        "/sonarr.lan/192.168.1.67"
+        "/lidarr.lan/192.168.1.67"
+        "/bazarr.lan/192.168.1.67"
+        "/prowlarr.lan/192.168.1.67"
+        "/sabnzbd.lan/192.168.1.67"
+        "/syncthing.lan/192.168.1.67"
+        "/audiobookshelf.lan/192.168.1.67"
+        "/calibre.lan/192.168.1.67"
       ];
       listen-address = [ "192.168.1.67" "192.168.1.94" "127.0.0.1" ];
     };
   };
 
-  services.jellyfin = {
-    enable = true;
-    openFirewall = false;
-    dataDir = "/var/lib/jellyfin";
-    cacheDir = "/var/cache/jellyfin";
-  };
-
-  services.immich = {
-    enable = true;
-    host = "192.168.1.94";
-    port = 2283;
-    mediaLocation = "/var/lib/immich/library";
-    openFirewall = false;
-  };
-
-  systemd.tmpfiles.rules = [
-    "d /var/lib/jellyfin 0750 jellyfin jellyfin - -"
-    "d /var/cache/jellyfin 0750 jellyfin jellyfin - -"
-    "d /var/lib/immich 0750 immich immich - -"
-    "d /var/lib/immich/library 0750 immich immich - -"
-  ];
-
   users.users.tim = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
   };
-
-  services.openssh.enable = true;
 
   time.timeZone = "Europe/London";
 

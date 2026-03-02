@@ -7,20 +7,29 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     doomemacs = {
       url = "github:doomemacs/doomemacs";
       flake = false;
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, doomemacs, ... }:
+  outputs = inputs@{ self, nixpkgs, home-manager, agenix, doomemacs, ... }:
     let
       inherit (nixpkgs.lib) nixosSystem;
+      baseModules = [
+        agenix.nixosModules.default
+        ./modules/shared
+      ];
       mkHost = { modules, hmConfig ? null, system ? "x86_64-linux" }:
         nixosSystem {
           inherit system;
           modules =
-            modules
+            baseModules
+            ++ modules
             ++ (if hmConfig == null then [ ] else [
               home-manager.nixosModules.home-manager
               {
@@ -50,6 +59,7 @@
 
         server = mkHost {
           modules = [
+            ./modules/homelab
             ./hosts/server/default.nix
           ];
         };
