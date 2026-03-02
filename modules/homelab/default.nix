@@ -5,7 +5,7 @@ let
   fqdn = sub: "${sub}.${cfg.domain}";
   proxyBlock = port: extra: ''
     tls internal
-    reverse_proxy ${cfg.bindAddress}:${toString port}${extra}
+    reverse_proxy ${cfg.proxyAddress}:${toString port}${extra}
   '';
   proxyWithBlock = port: lines: proxyBlock port '' {
 ${lines}
@@ -66,10 +66,16 @@ in {
       description = "Timezone used by containers and services that need it.";
     };
 
-    bindAddress = mkOption {
+    serviceAddress = mkOption {
       type = types.str;
       default = "127.0.0.1";
-      description = "Internal bind address for services that sit behind Caddy.";
+      description = "Address services bind to (set to 0.0.0.0 for LAN access).";
+    };
+
+    proxyAddress = mkOption {
+      type = types.str;
+      default = "127.0.0.1";
+      description = "Address Caddy should use when proxying to services.";
     };
   };
 
@@ -88,11 +94,13 @@ in {
     services.jellyfin = {
       enable = true;
       openFirewall = false;
+      dataDir = lib.mkDefault "${cfg.mediaDir}/jellyfin";
+      cacheDir = lib.mkDefault "/var/cache/jellyfin";
     };
 
     services.immich = {
       enable = true;
-      host = cfg.bindAddress;
+      host = cfg.serviceAddress;
       port = 2283;
       openFirewall = false;
       mediaLocation = "${cfg.mediaDir}/photos";
@@ -104,7 +112,7 @@ in {
       dataDir = "/home/${cfg.user}/syncthing";
       configDir = "/home/${cfg.user}/.config/syncthing";
       openDefaultPorts = false;
-      guiAddress = "${cfg.bindAddress}:8384";
+      guiAddress = "${cfg.serviceAddress}:8384";
       overrideDevices = true;
       overrideFolders = true;
     };
@@ -124,7 +132,7 @@ in {
 
     services.audiobookshelf = {
       enable = true;
-      host = cfg.bindAddress;
+      host = cfg.serviceAddress;
       port = 13378;
       openFirewall = false;
     };
@@ -158,7 +166,7 @@ in {
     virtualisation.oci-containers.containers.calibre-web-automated = {
       image = "crocodilestick/calibre-web-automated:latest";
       autoStart = true;
-      ports = [ "${cfg.bindAddress}:8083:8083" ];
+      ports = [ "${cfg.serviceAddress}:8083:8083" ];
       volumes = [
         "${cfg.mediaDir}/books:/books"
         "${calibreConfigDir}/config:/config"
