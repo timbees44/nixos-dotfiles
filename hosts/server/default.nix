@@ -6,11 +6,12 @@ let
     if echo "$state" | grep -q closed; then
       for bl in /sys/class/backlight/*; do
         echo 4 > "$bl/bl_power" 2>/dev/null
-        echo 0 > "$bl/brightness" 2>/dev/null
       done
     else
       for bl in /sys/class/backlight/*; do
         echo 0 > "$bl/bl_power" 2>/dev/null
+        brightness=$(cat "$bl/max_brightness" 2>/dev/null)
+        [ -n "$brightness" ] && echo "$brightness" > "$bl/brightness" 2>/dev/null
       done
     fi
   '';
