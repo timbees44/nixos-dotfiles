@@ -63,9 +63,13 @@ in
     HandleLidSwitchExternalPower = "ignore";
   };
 
-  services.udev.extraRules = ''
-SUBSYSTEM=="acpi", KERNEL=="LID*", ACTION=="change", RUN+="${lidBacklightScript}"
-'';
+  services.acpid = {
+    enable = true;
+    handlers.lid = {
+      event = "button/lid.*";
+      command = lidBacklightScript;
+    };
+  };
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
