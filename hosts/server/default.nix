@@ -1,6 +1,6 @@
 { config, pkgs, ... }:
 let
-  lanInterface = "wlp59s0"; # adjust to your wireless NIC
+  lanInterface = "enp58s0u1u2"; # primary ethernet NIC
 in
 {
   imports = [
@@ -112,7 +112,7 @@ in
       server = [ "1.1.1.1" "1.0.0.1" ];
       address = [
         "/jellyfin.lan/192.168.1.67"
-        "/immich.lan/192.168.1.94"
+        "/immich.lan/192.168.1.67"
         "/radarr.lan/192.168.1.67"
         "/sonarr.lan/192.168.1.67"
         "/lidarr.lan/192.168.1.67"
@@ -123,7 +123,7 @@ in
         "/audiobookshelf.lan/192.168.1.67"
         "/calibre.lan/192.168.1.67"
       ];
-      listen-address = [ "192.168.1.67" "192.168.1.94" "127.0.0.1" ];
+      listen-address = [ "192.168.1.67" "127.0.0.1" ];
     };
   };
 
