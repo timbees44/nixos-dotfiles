@@ -17,6 +17,20 @@ in
     proxyAddress = "127.0.0.1";
   };
 
+  services.openssh.settings = {
+    PermitRootLogin = "no";
+    PasswordAuthentication = false;
+    KbdInteractiveAuthentication = false;
+  };
+
+  services.logind = {
+		lidSwitch = "ignore";
+		lidSwitchDocked = "ignore";
+		extraConfig = ''
+			HandleLidSwitchExternalPower=ignore
+		'';
+    };
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -90,6 +104,9 @@ in
   users.users.tim = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
+	  openssh.authorizedKeys.keyFiles = [
+      ../../config/ssh/server-ed25519.pub
+		];
   };
 
   time.timeZone = "Europe/London";
