@@ -19,8 +19,29 @@ in
 
   services.openssh.settings = {
     PermitRootLogin = "no";
-    PasswordAuthentication = false;
+    PasswordAuthentication = true;
     KbdInteractiveAuthentication = false;
+  };
+
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [ pkgs.vulkan-validation-layers ];
+  };
+
+  services.xserver.videoDrivers = [ "nvidia" ];
+
+  hardware.nvidia = {
+    modesetting.enable = true;
+    nvidiaSettings = false;
+    powerManagement.enable = true;
+    open = false;
+    package = config.boot.kernelPackages.nvidiaPackages.production;
+    prime = {
+      offload.enable = true;
+      offload.enableOffloadCmd = true;
+      intelBusId = "PCI:0:2:0";
+      nvidiaBusId = "PCI:1:0:0";
+    };
   };
 
   services.logind.settings.Login = {
