@@ -23,13 +23,11 @@ in
     KbdInteractiveAuthentication = false;
   };
 
-  services.logind = {
-		lidSwitch = "ignore";
-		lidSwitchDocked = "ignore";
-		extraConfig = ''
-			HandleLidSwitchExternalPower=ignore
-		'';
-    };
+  services.logind.settings.Login = {
+    HandleLidSwitch = "ignore";
+    HandleLidSwitchDocked = "ignore";
+    HandleLidSwitchExternalPower = "ignore";
+  };
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -104,9 +102,11 @@ in
   users.users.tim = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
-	  openssh.authorizedKeys.keyFiles = [
-      ../../config/ssh/server-ed25519.pub
-		];
+    openssh.authorizedKeys = {
+      keyFiles = [
+        ../../config/ssh/server-ed25519.pub
+      ];
+    };
   };
 
   time.timeZone = "Europe/London";
