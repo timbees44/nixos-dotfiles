@@ -14,6 +14,7 @@ let
       done
     fi
   '';
+  lidBacklightAction = builtins.toString lidBacklightScript;
 in
 {
   imports = [
@@ -67,7 +68,7 @@ in
     enable = true;
     handlers.lid = {
       event = "button/lid.*";
-      command = lidBacklightScript;
+      action = lidBacklightAction;
     };
   };
 
