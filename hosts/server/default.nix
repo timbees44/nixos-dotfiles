@@ -64,7 +64,7 @@ in
   };
 
   services.udev.extraRules = ''
-SUBSYSTEM=="acpi", KERNEL=="LID", ACTION=="change", RUN+="${lidBacklightScript}"
+SUBSYSTEM=="acpi", KERNEL=="LID*", ACTION=="change", RUN+="${lidBacklightScript}"
 '';
 
   boot.loader.systemd-boot.enable = true;
