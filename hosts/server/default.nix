@@ -1,6 +1,19 @@
 { config, pkgs, ... }:
 let
   lanInterface = "enp58s0u1u2"; # primary ethernet NIC
+  lidBacklightScript = pkgs.writeShellScript "lid-backlight.sh" ''
+    state=$(cat /proc/acpi/button/lid/*/state)
+    if echo "$state" | grep -q closed; then
+      for bl in /sys/class/backlight/*; do
+        echo 4 > "$bl/bl_power" 2>/dev/null
+        echo 0 > "$bl/brightness" 2>/dev/null
+      done
+    else
+      for bl in /sys/class/backlight/*; do
+        echo 0 > "$bl/bl_power" 2>/dev/null
+      done
+    fi
+  '';
 in
 {
   imports = [
@@ -51,19 +64,7 @@ in
   };
 
   services.udev.extraRules = ''
-SUBSYSTEM=="acpi", KERNEL=="LID", ACTION=="change", RUN+="${pkgs.bash}/bin/bash -c '
-  state=$(cat /proc/acpi/button/lid/*/state)
-  if echo "$state" | grep -q closed; then
-    for bl in /sys/class/backlight/*; do
-      echo 4 > "$bl/bl_power" 2>/dev/null
-      echo 0 > "$bl/brightness" 2>/dev/null
-    done
-  else
-    for bl in /sys/class/backlight/*; do
-      echo 0 > "$bl/bl_power" 2>/dev/null
-    done
-  fi
-'"
+SUBSYSTEM=="acpi", KERNEL=="LID", ACTION=="change", RUN+="${lidBacklightScript}"
 '';
 
   boot.loader.systemd-boot.enable = true;
