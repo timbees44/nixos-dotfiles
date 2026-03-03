@@ -89,7 +89,7 @@ in {
 
     users.groups.media = { };
 
-    users.users.${cfg.user}.extraGroups = mkAfter [ "media" "podman" ];
+    users.users.${cfg.user}.extraGroups = mkAfter [ "media" "podman" "video" "render" ];
 
     services.jellyfin = {
       enable = true;
@@ -97,6 +97,8 @@ in {
       dataDir = lib.mkDefault "${cfg.mediaDir}/jellyfin";
       cacheDir = lib.mkDefault "/var/cache/jellyfin";
     };
+
+    systemd.services.jellyfin.serviceConfig.SupplementaryGroups = [ "video" "render" ];
 
     services.immich = {
       enable = true;
