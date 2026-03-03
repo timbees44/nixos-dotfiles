@@ -50,6 +50,23 @@ in
     HandleLidSwitchExternalPower = "ignore";
   };
 
+  services.udev.extraRules = ''
+    SUBSYSTEM=="acpi", KERNEL=="LID", ACTION=="change", RUN+="${pkgs.bash}/bin/bash -c '
+      state=$(cat /proc/acpi/button/lid/*/state)
+      if echo "$state" | grep -q closed; then
+        for bl in /sys/class/backlight/*; do
+          echo 4 > "$bl/bl_power" 2>/dev/null
+          echo 0 > "$bl/brightness" 2>/dev/null
+        done
+      else
+        for bl in /sys/class/backlight/*; do
+          echo 0 > "$bl/bl_power" 2>/dev/null
+        done
+      fi
+    '
+    "
+  '';
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
