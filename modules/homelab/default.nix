@@ -15,6 +15,7 @@ ${lines}
   ensureDir = path: owner: group: mode: "d '${path}' ${mode} ${owner} ${group} - -";
   mediaSubdirRule = name: ensureDir "${cfg.mediaDir}/${name}" cfg.user "media" "0755";
   simpleProxy = port: { extraConfig = proxyBlock port ""; };
+  dnsAddr = "${cfg.serviceAddress}";
   caddyVirtualHosts = {
     "${fqdn "jellyfin"}" = simpleProxy 8096;
     "${fqdn "radarr"}" = simpleProxy 7878;
@@ -102,7 +103,7 @@ in {
 
     services.immich = {
       enable = true;
-      host = cfg.serviceAddress;
+      host = dnsAddr;
       port = 2283;
       openFirewall = false;
       mediaLocation = "${cfg.mediaDir}/photos";
@@ -134,7 +135,7 @@ in {
 
     services.audiobookshelf = {
       enable = true;
-      host = cfg.serviceAddress;
+      host = dnsAddr;
       port = 13378;
       openFirewall = false;
     };
@@ -142,6 +143,9 @@ in {
     services.caddy = {
       enable = true;
       virtualHosts = caddyVirtualHosts;
+      extraConfig = ''
+        bind ${cfg.proxyAddress}
+      '';
     };
 
     systemd.tmpfiles.rules = [
