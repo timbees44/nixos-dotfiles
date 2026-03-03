@@ -174,14 +174,14 @@ in {
       autoStart = true;
       ports = [ "${cfg.serviceAddress}:8083:8083" ];
       volumes = [
-        "${cfg.mediaDir}/books:/books"
+        "${cfg.mediaDir}/books:/calibre-library"
         "${calibreConfigDir}/config:/config"
       ];
       environment = {
         PUID = "1000";
         PGID = "100";
         TZ = cfg.timezone;
-        CALIBRE_LIBRARY_PATH = "/books";
+        CALIBRE_LIBRARY_PATH = "/calibre-library";
         METADATA_UPDATE = "true";
       };
     };
