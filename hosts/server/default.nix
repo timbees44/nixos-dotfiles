@@ -55,13 +55,19 @@ in
 
   networking = {
     hostName = "server";
-    useDHCP = false;
-    networkmanager.enable = true;
-    interfaces.${lanInterface}.ipv4.addresses = [
-      { address = "192.168.1.67"; prefixLength = 24; }
-      { address = "192.168.1.94"; prefixLength = 24; }
-    ];
-    defaultGateway = "192.168.1.1";
+    useNetworkd = true;
+    networkmanager.enable = false;
+    interfaces.${lanInterface} = {
+      useDHCP = false;
+      ipv4.addresses = [
+        { address = "192.168.1.67"; prefixLength = 24; }
+        { address = "192.168.1.94"; prefixLength = 24; }
+      ];
+    };
+    defaultGateway = {
+      address = "192.168.1.1";
+      interface = lanInterface;
+    };
     nameservers = [ "192.168.1.1" "1.1.1.1" ];
     hosts = {
       "192.168.1.67" = [
@@ -75,8 +81,9 @@ in
         "syncthing.lan"
         "audiobookshelf.lan"
         "calibre.lan"
+        "immich.lan"
+        "photos.lan"
       ];
-      "192.168.1.94" = [ "immich.lan" "photos.lan" ];
     };
     firewall = {
       enable = true;
