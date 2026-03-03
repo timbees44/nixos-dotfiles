@@ -154,6 +154,7 @@ in {
       (mediaSubdirRule "tvshows")
       (mediaSubdirRule "music")
       (mediaSubdirRule "books")
+      (mediaSubdirRule "books-ingest")
       (mediaSubdirRule "audiobooks")
       (mediaSubdirRule "photos")
       (ensureDir calibreConfigDir cfg.user "media" "0755")
@@ -175,6 +176,7 @@ in {
       ports = [ "${cfg.serviceAddress}:8083:8083" ];
       volumes = [
         "${cfg.mediaDir}/books:/calibre-library"
+        "${cfg.mediaDir}/books-ingest:/cwa-book-ingest"
         "${calibreConfigDir}/config:/config"
       ];
       environment = {
