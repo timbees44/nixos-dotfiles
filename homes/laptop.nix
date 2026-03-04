@@ -14,7 +14,6 @@ let
     wezterm = "wezterm";
     wofi = "wofi";
     swaylock = "swaylock";
-    scripts = "scripts";
   };
 in
 {
@@ -39,17 +38,17 @@ in
     events = [
       {
         event = "before-sleep";
-        command = "${pkgs.swaylock-effects}/bin/swaylock -f";
+        command = "${pkgs.systemd}/bin/loginctl lock-session";
       }
       {
         event = "lock";
-        command = "${pkgs.swaylock-effects}/bin/swaylock -f";
+        command = "${pkgs.systemd}/bin/loginctl lock-session";
       }
     ];
     timeouts = [
       {
         timeout = 300;
-        command = "${pkgs.swaylock-effects}/bin/swaylock -f";
+        command = "${pkgs.systemd}/bin/loginctl lock-session";
       }
       {
         timeout = 310;
@@ -57,6 +56,21 @@ in
         resumeCommand = "${pkgs.hyprland}/bin/hyprctl dispatch dpms on";
       }
     ];
+  };
+
+  systemd.user.services."screen-lock" = {
+    Unit = {
+      Description = "Screen locker via swaylock";
+      PartOf = [ "graphical-session.target" "lock.target" ];
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "simple";
+      ExecStart = "${pkgs.swaylock-effects}/bin/swaylock -f";
+    };
+    Install = {
+      WantedBy = [ "lock.target" ];
+    };
   };
 
   home.packages = with pkgs; [
@@ -87,8 +101,6 @@ in
     wezterm
     wofi
     zoxide
-    bluetui
-    impala
     (pkgs.writeShellApplication {
       name = "ns";
       runtimeInputs = with pkgs; [

@@ -27,7 +27,7 @@
         "custom/sep",
         "disk",
         "custom/sep",
-        "custom/battery",
+        "battery",
         "custom/sep",
         "clock",
         "custom/sep",
@@ -39,7 +39,21 @@
         "disable-scroll": true,
         "all-outputs": true,
         "warp-on-scroll": false,
-        "format": "{name}",
+        "format": "{icon}",
+        "format-icons": {
+            "default": "",
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9",
+            "10": "0",
+            "active": "󱓻"
+        },
         "persistent-workspaces": {
             "*" : 9
         }
@@ -60,22 +74,44 @@
         "format-alt": "{:%Y-%m-%d}"
     },
     "cpu": {
-        "format": "CPU: {usage}%",
-        "tooltip": false
+        "format": "󰍛",
+        "tooltip-format": "CPU {usage}%"
     },
     "memory": {
-        "format": "Mem: {used}GiB"
+        "format": "󰻴",
+        "tooltip-format": "Mem {used}GiB"
     },
     "disk": {
         "interval": 60,
         "path": "/",
-        "format": "Disk: {free}"
+        "format": "",
+        "tooltip-format": "Disk {free}"
     },
-    "custom/battery": {
-        "exec": "/home/tim/.config/waybar/battery_status.sh",
-        "interval": 30,
-        "format": "Bat: {}",
-        "exec-if": "bash -lc \"compgen -G '/sys/class/power_supply/BAT*' >/dev/null\""
+    "bluetooth": {
+        "format": "",
+        "format-off": "󰂲",
+        "format-disabled": "󰂲",
+        "format-connected": "󰂱",
+        "format-no-controller": "",
+        "tooltip-format": "Devices connected: {num_connections}"
+    },
+    "battery": {
+        "format": "{capacity}% {icon}",
+        "format-discharging": "{icon}",
+        "format-charging": "{icon}",
+        "format-plugged": "",
+        "format-icons": {
+            "charging": ["󰢜", "󰂆", "󰂇", "󰂈", "󰢝", "󰂉", "󰢞", "󰂊", "󰂋", "󰂅"],
+            "default": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
+        },
+        "format-full": "󰂅",
+        "tooltip-format-discharging": "{power:>1.0f}W↓ {capacity}%",
+        "tooltip-format-charging": "{power:>1.0f}W↑ {capacity}%",
+        "interval": 5,
+        "states": {
+            "warning": 20,
+            "critical": 10
+        }
     },
     "network": {
         "format-icons": ["󰤯", "󰤟", "󰤢", "󰤥", "󰤨"],
@@ -86,17 +122,7 @@
         "tooltip-format-wifi": "{essid} ({frequency} GHz)\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
         "tooltip-format-ethernet": "⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
         "tooltip-format-disconnected": "Disconnected",
-        "interval": 3,
-        "on-click": "~/.config/scripts/launch-wifi.sh"
-    },
-    "bluetooth": {
-        "format": "",
-        "format-off": "󰂲",
-        "format-disabled": "󰂲",
-        "format-connected": "󰂱",
-        "format-no-controller": "",
-        "tooltip-format": "Devices connected: {num_connections}",
-        "on-click": "~/.config/scripts/launch-bluetooth.sh"
+        "interval": 3
     },
     "custom/sep": {
         "format" : "|",
