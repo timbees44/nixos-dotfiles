@@ -14,6 +14,7 @@ let
     wezterm = "wezterm";
     wofi = "wofi";
     swaylock = "swaylock";
+    scripts = "scripts";
   };
 in
 {
@@ -85,6 +86,8 @@ in
     wezterm
     wofi
     zoxide
+    bluetui
+    impala
     (pkgs.writeShellApplication {
       name = "ns";
       runtimeInputs = with pkgs; [

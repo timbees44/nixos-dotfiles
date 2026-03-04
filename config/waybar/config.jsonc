@@ -17,6 +17,8 @@
 
     "modules-right": [
         "custom/sep",
+        "bluetooth",
+        "custom/sep",
         "network",
         "custom/sep",
         "cpu",
@@ -76,8 +78,25 @@
         "exec-if": "bash -lc \"compgen -G '/sys/class/power_supply/BAT*' >/dev/null\""
     },
     "network": {
-        "format": "Online",
-        "format-disconnected": "Disconnected ⚠"
+        "format-icons": ["󰤯", "󰤟", "󰤢", "󰤥", "󰤨"],
+        "format": "{icon}",
+        "format-wifi": "{icon}",
+        "format-ethernet": "󰀂",
+        "format-disconnected": "󰤮",
+        "tooltip-format-wifi": "{essid} ({frequency} GHz)\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
+        "tooltip-format-ethernet": "⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
+        "tooltip-format-disconnected": "Disconnected",
+        "interval": 3,
+        "on-click": "~/.config/scripts/launch-wifi.sh"
+    },
+    "bluetooth": {
+        "format": "",
+        "format-off": "󰂲",
+        "format-disabled": "󰂲",
+        "format-connected": "󰂱",
+        "format-no-controller": "",
+        "tooltip-format": "Devices connected: {num_connections}",
+        "on-click": "~/.config/scripts/launch-bluetooth.sh"
     },
     "custom/sep": {
         "format" : "|",
