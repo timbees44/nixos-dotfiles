@@ -108,33 +108,38 @@
         "$nmcli_cmd" radio wifi on >/dev/null 2>&1 || true
       }
 
+      resume_wifi() {
+        local target="$1"
+        log "Resume event detected for $target"
+        ensure_radio
+        "$systemctl_cmd" try-restart NetworkManager.service >/dev/null 2>&1 || log "NetworkManager restart failed"
+
+        attempt=1
+        max_attempts=6
+        while [ "$attempt" -le "$max_attempts" ]; do
+          iface=$(find_wifi_iface || true)
+          if [ -z "$iface" ]; then
+            log "No Wi-Fi interface detected (attempt ''${attempt}/''${max_attempts})"
+          elif wifi_connected "$iface"; then
+            log "Wi-Fi already connected on $iface"
+            return 0
+          elif attempt_connect "$iface"; then
+            log "Wi-Fi connected on $iface"
+            return 0
+          else
+            log "Failed to connect on $iface (attempt ''${attempt}/''${max_attempts}), toggling radio"
+            toggle_radio
+          fi
+          "$sleep_cmd" 2
+          attempt=$((attempt + 1))
+        done
+
+        log "Wi-Fi resume retries exhausted after ''${max_attempts} attempts"
+      }
+
       case "$1/$2" in
         post/*)
-          log "Resume event detected for $2"
-          ensure_radio
-          "$systemctl_cmd" try-restart NetworkManager.service >/dev/null 2>&1 || log "NetworkManager restart failed"
-
-          attempt=1
-          max_attempts=6
-          while [ "$attempt" -le "$max_attempts" ]; do
-            iface=$(find_wifi_iface || true)
-            if [ -z "$iface" ]; then
-              log "No Wi-Fi interface detected (attempt ''${attempt}/''${max_attempts})"
-            elif wifi_connected "$iface"; then
-              log "Wi-Fi already connected on $iface"
-              exit 0
-            elif attempt_connect "$iface"; then
-              log "Wi-Fi connected on $iface"
-              exit 0
-            else
-              log "Failed to connect on $iface (attempt ''${attempt}/''${max_attempts}), toggling radio"
-              toggle_radio
-            fi
-            "$sleep_cmd" 2
-            attempt=$((attempt + 1))
-          done
-
-          log "Wi-Fi resume retries exhausted after ''${max_attempts} attempts"
+          resume_wifi "$2" &
           ;;
       esac
     '';
