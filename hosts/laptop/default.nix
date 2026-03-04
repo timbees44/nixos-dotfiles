@@ -37,7 +37,7 @@
 
   users.users.tim = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ];
+    extraGroups = [ "wheel" "networkmanager" ];
   };
 
   programs.firefox.enable = true;
@@ -51,6 +51,8 @@
     gcc
     pkg-config
     libtool
+    unzip
+    gnutar
   ];
 
   powerManagement = {
