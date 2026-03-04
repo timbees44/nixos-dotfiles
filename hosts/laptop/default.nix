@@ -145,14 +145,6 @@
     '';
   };
 
-  services.logind.settings.Login = {
-    HandleLidSwitch = "suspend";
-    HandleLidSwitchExternalPower = "suspend";
-    HandleLidSwitchDocked = "ignore";
-  };
-
-  security.pam.services.swaylock = {};
-
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
   ];
