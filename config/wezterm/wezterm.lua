@@ -16,6 +16,9 @@ config.window_background_opacity = 0.9
 -- Window bar
 config.window_decorations = "RESIZE"
 
+-- Do not prompt when closing windows launched for helper tasks
+config.window_close_confirmation = "NeverPrompt"
+
 -- Remove default padding so the prompt hugs the top edge
 config.window_padding = {
   left = 0,

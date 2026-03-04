@@ -71,6 +71,7 @@ in
     fzf
     gcc
     gnumake
+    jq
     hyprpaper
     neovim
     nitch

@@ -10,7 +10,10 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking.hostName = "nixos";
-  networking.networkmanager.enable = true;
+  networking.networkmanager = {
+    enable = true;
+    wifi.backend = "iwd";
+  };
 
   time.timeZone = "Europe/London";
 
@@ -31,7 +34,6 @@
     enable = true;
     powerOnBoot = true;
   };
-  services.blueman.enable = true;
 
   users.users.tim = {
     isNormalUser = true;
