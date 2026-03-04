@@ -18,12 +18,6 @@ ${lines}
   dnsAddr = "${cfg.serviceAddress}";
   caddyVirtualHosts = {
     "${fqdn "jellyfin"}" = simpleProxy 8096;
-    "${fqdn "radarr"}" = simpleProxy 7878;
-    "${fqdn "sonarr"}" = simpleProxy 8989;
-    "${fqdn "lidarr"}" = simpleProxy 8686;
-    "${fqdn "bazarr"}" = simpleProxy 6767;
-    "${fqdn "prowlarr"}" = simpleProxy 9696;
-    "${fqdn "sabnzbd"}" = simpleProxy 8080;
     "${fqdn "audiobookshelf"}" = simpleProxy 13378;
     "${fqdn "calibre"}" = simpleProxy 8083;
     "${fqdn "immich"}" = {
@@ -120,18 +114,7 @@ in {
       overrideFolders = true;
     };
 
-    services.radarr.enable = true;
-    services.radarr.openFirewall = false;
-    services.sonarr.enable = true;
-    services.sonarr.openFirewall = false;
-    services.lidarr.enable = true;
-    services.lidarr.openFirewall = false;
-    services.bazarr.enable = true;
-    services.bazarr.openFirewall = false;
-    services.prowlarr.enable = true;
-    services.prowlarr.openFirewall = false;
-    services.sabnzbd.enable = true;
-    services.sabnzbd.openFirewall = false;
+    # *arr stack disabled by default; enable per host if needed
 
     services.audiobookshelf = {
       enable = true;
@@ -189,5 +172,7 @@ in {
     };
 
     networking.firewall.allowedTCPPorts = mkBefore [ 80 443 ];
+
+
   };
 }

@@ -94,12 +94,6 @@ in
     hosts = {
       "192.168.1.67" = [
         "jellyfin.lan"
-        "radarr.lan"
-        "sonarr.lan"
-        "lidarr.lan"
-        "bazarr.lan"
-        "prowlarr.lan"
-        "sabnzbd.lan"
         "syncthing.lan"
         "audiobookshelf.lan"
         "calibre.lan"
@@ -112,12 +106,6 @@ in
       allowedTCPPorts = [
         22 53 80 443
         8096 # jellyfin
-        7878 # radarr
-        8989 # sonarr
-        8686 # lidarr
-        6767 # bazarr
-        9696 # prowlarr
-        8080 # sabnzbd
         8384 # syncthing UI
         13378 # audiobookshelf
         8083 # calibre
@@ -136,12 +124,6 @@ in
       address = [
         "/jellyfin.lan/192.168.1.67"
         "/immich.lan/192.168.1.67"
-        "/radarr.lan/192.168.1.67"
-        "/sonarr.lan/192.168.1.67"
-        "/lidarr.lan/192.168.1.67"
-        "/bazarr.lan/192.168.1.67"
-        "/prowlarr.lan/192.168.1.67"
-        "/sabnzbd.lan/192.168.1.67"
         "/syncthing.lan/192.168.1.67"
         "/audiobookshelf.lan/192.168.1.67"
         "/calibre.lan/192.168.1.67"
