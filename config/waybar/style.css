@@ -25,18 +25,15 @@ window#waybar {
     padding: 0 6px;
     color: @cyn;
     background: transparent;
-    border-bottom: 3px solid @bg;
 }
 #workspaces button.active {
     color: @cyn;
-    border-bottom: 3px solid @mag;
 }
 #workspaces button.empty {
     color: @white;
 }
 #workspaces button.empty.active {
     color: @cyn;
-    border-bottom: 3px solid @mag;
 }
 
 #workspaces button.urgent {
@@ -55,6 +52,7 @@ button:hover {
 #memory,
 #disk,
 #network,
+#bluetooth,
 #tray {
     padding: 0 8px;
     color: @white;
@@ -66,32 +64,30 @@ button:hover {
 
 #clock {
     color: @cyn;
-    border-bottom: 4px solid @cyn;
 }
 
 #custom-battery {
     color: @mag;
-    border-bottom: 4px solid @mag;
 }
 
 #disk {
     color: @ylw;
-    border-bottom: 4px solid @ylw;
 }
 
 #memory {
     color: @mag;
-    border-bottom: 4px solid @mag;
 }
 
 #cpu {
     color: @grn;
-    border-bottom: 4px solid @grn;
 }
 
 #network {
     color: @blu;
-    border-bottom: 4px solid @blu;
+}
+
+#bluetooth {
+    color: @blu;
 }
 
 #network.disconnected {
