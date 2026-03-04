@@ -41,7 +41,6 @@ in
     brave
     emacs
     eza
-    foot
     fzf
     gcc
     gnumake
@@ -50,7 +49,6 @@ in
     neovim
     nitch
     nixpkgs-fmt
-    opencode
     pcmanfm
     ripgrep
     starship
