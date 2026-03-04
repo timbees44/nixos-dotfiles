@@ -32,51 +32,11 @@ in
     pinentry.package = pkgs.pinentry-gnome3;
   };
 
-  services.swayidle = {
-    enable = true;
-    systemdTarget = "hyprland-session.target";
-    events = [
-      {
-        event = "before-sleep";
-        command = "${pkgs.systemd}/bin/loginctl lock-session";
-      }
-      {
-        event = "lock";
-        command = "${pkgs.systemd}/bin/loginctl lock-session";
-      }
-    ];
-    timeouts = [
-      {
-        timeout = 300;
-        command = "${pkgs.systemd}/bin/loginctl lock-session";
-      }
-      {
-        timeout = 310;
-        command = "${pkgs.hyprland}/bin/hyprctl dispatch dpms off";
-        resumeCommand = "${pkgs.hyprland}/bin/hyprctl dispatch dpms on";
-      }
-    ];
-  };
-
-  systemd.user.services."screen-lock" = {
-    Unit = {
-      Description = "Screen locker via swaylock";
-      PartOf = [ "graphical-session.target" "lock.target" ];
-      After = [ "graphical-session.target" ];
-    };
-    Service = {
-      Type = "simple";
-      ExecStart = "${pkgs.swaylock-effects}/bin/swaylock -f";
-    };
-    Install = {
-      WantedBy = [ "lock.target" ];
-    };
-  };
-
   home.packages = with pkgs; [
     bat
-			btop
-			cmake
+		brave
+		btop
+		cmake
     codex
     brave
     emacs
