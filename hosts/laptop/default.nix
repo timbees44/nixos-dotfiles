@@ -27,6 +27,12 @@
     withUWSM = true;
   };
 
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+  };
+  services.blueman.enable = true;
+
   users.users.tim = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
