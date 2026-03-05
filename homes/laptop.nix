@@ -45,6 +45,7 @@ in
     gcc
     gnumake
     jq
+    hypridle
     hyprpaper
     neovim
     nitch
