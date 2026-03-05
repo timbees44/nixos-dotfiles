@@ -26,12 +26,20 @@
     wayland.enable = true;
   };
   services.displayManager.defaultSession = "hyprland-uwsm";
+  services.mullvad-vpn = {
+    enable = true;
+    package = pkgs.mullvad-vpn;
+  };
+  services.udisks2.enable = true;
+  services.gvfs.enable = true;
 
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
     withUWSM = true;
   };
+
+  security.polkit.enable = true;
 
   hardware.bluetooth = {
     enable = true;
