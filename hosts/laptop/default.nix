@@ -43,8 +43,6 @@
     extraGroups = [ "wheel" "networkmanager" ];
   };
 
-  programs.firefox.enable = true;
-
   environment.systemPackages = with pkgs; [
     vim
     git
