@@ -38,15 +38,15 @@ in
 		btop
 		cmake
     codex
-    brave
+		deluge
     emacs
     eza
     fzf
     gcc
     gnumake
-    jq
     hypridle
     hyprpaper
+    jq
     neovim
     nitch
     nixpkgs-fmt
