@@ -120,6 +120,10 @@
     "root": {
       "inputs": {
         "agenix": "agenix",
+        "darwin": [
+          "agenix",
+          "darwin"
+        ],
         "doomemacs": "doomemacs",
         "home-manager": "home-manager_2",
         "nixpkgs": "nixpkgs"

@@ -11,15 +11,17 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    darwin.follows = "agenix/darwin";
     doomemacs = {
       url = "github:doomemacs/doomemacs";
       flake = false;
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, agenix, doomemacs, ... }:
+  outputs = inputs@{ self, nixpkgs, home-manager, agenix, darwin, doomemacs, ... }:
     let
       inherit (nixpkgs.lib) nixosSystem;
+      inherit (darwin.lib) darwinSystem;
       baseModules = [
         agenix.nixosModules.default
         ./modules/shared
@@ -48,6 +50,26 @@
               }
             ]);
         };
+      mkDarwinHost = { modules, hmConfig ? null, system ? "aarch64-darwin" }:
+        darwinSystem {
+          inherit system;
+          modules =
+            modules
+            ++ (if hmConfig == null then [ ] else [
+              home-manager.darwinModules.home-manager
+              {
+                home-manager = {
+                  useGlobalPkgs = true;
+                  useUserPackages = true;
+                  users.tim = import hmConfig;
+                  backupFileExtension = "backup";
+                  extraSpecialArgs = {
+                    inherit doomemacs;
+                  };
+                };
+              }
+            ]);
+        };
     in {
       nixosConfigurations = {
         laptop = mkHost {
@@ -62,6 +84,15 @@
             ./modules/homelab
             ./hosts/server/default.nix
           ];
+        };
+      };
+
+      darwinConfigurations = {
+        macbook = mkDarwinHost {
+          modules = [
+            ./hosts/macbook/default.nix
+          ];
+          hmConfig = ./homes/macbook.nix;
         };
       };
     };
