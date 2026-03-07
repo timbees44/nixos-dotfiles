@@ -3,12 +3,12 @@
   networking.hostName = "laptop";
 
   users.users.tim.home = "/Users/tim";
+  ids.gids.nixbld = 350;
 
   nix = {
     settings = {
       experimental-features = [ "nix-command" "flakes" ];
       trusted-users = [ "root" "tim" ];
-      auto-optimise-store = true;
       warn-dirty = false;
     };
 
@@ -25,7 +25,7 @@
     optimise.automatic = true;
   };
 
-  services.nix-daemon.enable = true;
+  nix.enable = true;
   programs.zsh.enable = true;
 
   nixpkgs = {
@@ -40,6 +40,8 @@
     vim
     wget
   ];
+
+  system.primaryUser = "tim";
 
   system.defaults = {
     dock.autohide = true;
