@@ -4,14 +4,15 @@
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
     home-manager = {
-      url = "github:nix-community/home-manager";
+      url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     agenix = {
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.darwin.follows = "darwin";
     };
-    darwin.follows = "agenix/darwin";
+    darwin.url = "github:lnl7/nix-darwin/master";
     doomemacs = {
       url = "github:doomemacs/doomemacs";
       flake = false;
