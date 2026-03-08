@@ -31,22 +31,41 @@ in
 
   # User-facing packages managed by Home Manager.
   home.packages = with pkgs; [
+    aspell
+    automake
     bat
     btop
+    cargo-update
     cmake
     codex
+    coreutils
     emacs
     eza
+    fd
     fzf
     gcc
+    gawk
+    gnugrep
+    gnused
     gnumake
+    gnutar
     jq
+    libtool
     neovim
     nixpkgs-fmt
+    nmap
+    nodejs_22
+    openvpn
+    pkg-config
+    poppler
     ripgrep
+    skim
     starship
+    stow
+    texinfo
     tmux
     tree
+    yubikey-manager
     wezterm
     zoxide
     (pkgs.writeShellApplication {

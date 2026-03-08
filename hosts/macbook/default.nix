@@ -48,6 +48,28 @@
     wget
   ];
 
+  # Declarative Homebrew management via nix-darwin.
+  # Keep cleanup off until brews/casks are fully mirrored here.
+  homebrew = {
+    enable = true;
+
+    onActivation = {
+      autoUpdate = true;
+      upgrade = true;
+      cleanup = "none";
+    };
+
+    taps = [
+      "d12frosted/emacs-plus"
+    ];
+    # Keep only Brew-specific packages here; prefer nixpkgs for CLI tools.
+    brews = [
+      "d12frosted/emacs-plus/emacs-plus@30"
+    ];
+    casks = [ ];
+    masApps = { };
+  };
+
   # Required by newer nix-darwin for user-scoped defaults writes.
   system.primaryUser = "tim";
 
