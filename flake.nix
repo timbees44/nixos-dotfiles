@@ -10,8 +10,10 @@
     agenix = {
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
+      # Reuse the same nix-darwin revision for agenix's Darwin module graph.
       inputs.darwin.follows = "darwin";
     };
+    # nix-darwin drives macOS system configuration.
     darwin.url = "github:lnl7/nix-darwin/master";
     doomemacs = {
       url = "github:doomemacs/doomemacs";
@@ -51,12 +53,14 @@
               }
             ]);
         };
+      # Helper for Darwin hosts (separate from NixOS module system).
       mkDarwinHost = { modules, hmConfig ? null, system ? "aarch64-darwin" }:
         darwinSystem {
           inherit system;
           modules =
             modules
             ++ (if hmConfig == null then [ ] else [
+              # Integrate Home Manager as a nix-darwin module.
               home-manager.darwinModules.home-manager
               {
                 home-manager = {
@@ -89,6 +93,7 @@
       };
 
       darwinConfigurations = {
+        # Local MacBook target: `darwin-rebuild switch --flake .#macbook`
         macbook = mkDarwinHost {
           modules = [
             ./hosts/macbook/default.nix
