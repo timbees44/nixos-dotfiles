@@ -58,7 +58,10 @@
         darwinSystem {
           inherit system;
           modules =
-            modules
+            [
+              agenix.darwinModules.default
+            ]
+            ++ modules
             ++ (if hmConfig == null then [ ] else [
               # Integrate Home Manager as a nix-darwin module.
               home-manager.darwinModules.home-manager

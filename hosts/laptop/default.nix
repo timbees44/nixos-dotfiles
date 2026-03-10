@@ -18,6 +18,25 @@
     };
   };
 
+  # Decrypt agenix secrets using this machine's age identity key.
+  age.identityPaths = [ "/home/tim/.config/age/keys.txt" ];
+  age.secrets = {
+    mbsyncrc = {
+      file = ../../secrets/mbsyncrc.age;
+      path = "/home/tim/.config/isync/mbsyncrc";
+      owner = "tim";
+      group = "users";
+      mode = "0400";
+    };
+    msmtp-config = {
+      file = ../../secrets/msmtp-config.age;
+      path = "/home/tim/.config/msmtp/config";
+      owner = "tim";
+      group = "users";
+      mode = "0400";
+    };
+  };
+
   time.timeZone = "Europe/London";
 
   services.xserver.enable = true;
