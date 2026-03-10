@@ -26,12 +26,12 @@ sketchybar --bar position=top height=34 blur_radius=0 color="$CLR_BG" padding_le
 
 # === WORKSPACES ===
 sketchybar --add event aerospace_workspace_change
-LABELS=("" "" "" "󱙺" "" "" "" "󰎇" "󰖣")
+LABELS=("一" "二" "三" "四" "五" "六" "七" "八" "九")
 LEFT_SPACE_ITEMS=()
 INDEX=0
 
 for sid in $(aerospace list-workspaces --all); do
-  label="${LABELS[$INDEX]:-}"
+  label="${LABELS[$INDEX]:-$sid}"
   item="space.$sid"
   LEFT_SPACE_ITEMS+=("$item")
 
@@ -43,22 +43,32 @@ for sid in $(aerospace list-workspaces --all); do
       background.height=20 \
       background.drawing=off \
       label="$label" \
+      label.color=0x77ebdbb2 \
+      label.font="JetBrainsMono Nerd Font:Regular:14.0" \
       icon.padding_left="$ICON_PADDING" \
       icon.padding_right="$ICON_PADDING" \
       label.padding_left="$LABEL_PADDING" \
       label.padding_right="$LABEL_PADDING" \
-      click_script="aerospace workspace $sid" \
+      click_script="aerospace workspace $sid && sketchybar --trigger aerospace_workspace_change" \
       script="$PLUGIN_DIR/aerospace.sh $sid"
 
   ((INDEX++))
 done
 
+# Ensure active workspace is highlighted on first load.
+focused_ws="$(aerospace list-workspaces --focused 2>/dev/null | head -n 1)"
+if [ -n "$focused_ws" ]; then
+  sketchybar --set "space.$focused_ws" \
+    label.color="$CLR_FG" \
+    label.font="JetBrainsMono Nerd Font:Bold:14.0"
+fi
+
 # === DEFAULTS (Unified paddings for all items/icons/labels) ===
 sketchybar --default \
   padding_left="$ITEM_PADDING" \
   padding_right="$ITEM_PADDING" \
-  icon.font="VictorMono Nerd Font:Regular:12.0" \
-  label.font="VictorMono Nerd Font:Regular:14.0" \
+  icon.font="JetBrainsMono Nerd Font:Regular:12.0" \
+  label.font="JetBrainsMono Nerd Font:Regular:14.0" \
   icon.color="$CLR_FG" \
   label.color="$CLR_FG" \
   icon.padding_left="$ICON_PADDING" \
