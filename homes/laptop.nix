@@ -32,7 +32,7 @@ in
     pinentry.package = pkgs.pinentry-gnome3;
   };
 
-  home.packages = with pkgs; [
+  home.packages = (with pkgs; [
     bat
 		brave
 		btop
@@ -46,7 +46,10 @@ in
     gnumake
     hypridle
     hyprpaper
+    isync
     jq
+    msmtp
+    mu
     neovim
     nitch
     nixpkgs-fmt
@@ -70,7 +73,8 @@ in
       ];
       text = ''exec "${pkgs.nix-search-tv.src}/nixpkgs.sh" "$@"'';
     })
-  ];
+  ]) ++ lib.optionals (pkgs.mu ? emacs) [ pkgs.mu.emacs ]
+    ++ lib.optionals (pkgs ? mu4e) [ pkgs.mu4e ];
 
   home.file.".bashrc" = {
     source = create_symlink "${dotfiles}/bash/.bashrc";

@@ -100,6 +100,33 @@
   :config
   (setq pdf-view-midnight-colors '("#ABB2BF" . "#282C35")))
 
+;; On macOS, use Homebrew mu4e path when nixpkgs doesn't expose mu4e.el.
+(when (featurep 'ns)
+  (setq mu4e-mu-binary "/opt/homebrew/bin/mu"
+        mu4e-maildir "~/.mail")
+  (dolist (dir '("/opt/homebrew/share/emacs/site-lisp/mu/mu4e"
+                 "/opt/homebrew/opt/mu/share/emacs/site-lisp/mu4e"
+                 "/usr/local/share/emacs/site-lisp/mu/mu4e"
+                 "/usr/local/opt/mu/share/emacs/site-lisp/mu4e"))
+    (when (file-directory-p dir)
+      (add-to-list 'load-path dir))))
+
+;; Use decrypted mail configs managed by agenix.
+(after! mu4e
+  (setq mu4e-maildir "~/.mail"
+        mu4e-get-mail-command "mbsync -c ~/.config/isync/mbsyncrc gmail"
+        mu4e-update-interval 300
+        sendmail-program (or (executable-find "msmtp") "/usr/bin/msmtp")
+        message-send-mail-function #'message-send-mail-with-sendmail
+        message-sendmail-f-is-evil t
+        message-sendmail-extra-arguments
+        (list "--read-envelope-from"
+              "--read-recipients"
+              (concat "--file=" (expand-file-name "~/.config/msmtp/config")))
+        mu4e-drafts-folder "/gmail/[Gmail]/Drafts"
+        mu4e-sent-folder "/gmail/[Gmail]/Sent Mail"
+        mu4e-trash-folder "/gmail/[Gmail]/Trash"
+        mu4e-refile-folder "/gmail/[Gmail]/All Mail"))
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `after!' block, otherwise Doom's defaults may override your settings. E.g.

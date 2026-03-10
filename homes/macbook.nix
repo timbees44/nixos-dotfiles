@@ -8,12 +8,61 @@ let
 
   # Config directories to expose under ~/.config via symlinks.
   configs = {
+    aerospace = "aerospace";
     doom = "doom";
     nvim = "nvim";
+    sketchybar = "sketchybar";
     starship = "starship";
     tmux = "tmux";
     wezterm = "wezterm";
   };
+
+  # Cross-platform CLI/editor tooling.
+  commonPkgs = with pkgs; [
+    aspell
+    automake
+    bat
+    btop
+    cargo-update
+    cmake
+    codex
+    coreutils
+    eza
+    fd
+    fzf
+    gcc
+    gawk
+    gnugrep
+    gnused
+    gnumake
+    gnutar
+    jq
+    libtool
+    isync
+    msmtp
+    mu
+    neovim
+    nixpkgs-fmt
+    nmap
+    nodejs_22
+    pkg-config
+    poppler
+    ripgrep
+    skim
+    starship
+    stow
+    texinfo
+    tmux
+    tree
+    yubikey-manager
+    wezterm
+    zoxide
+  ];
+
+  # macOS-specific additions.
+  macPkgs = with pkgs; [
+    openvpn
+  ];
 in
 {
   home.username = "tim";
@@ -30,44 +79,10 @@ in
   };
 
   # User-facing packages managed by Home Manager.
-  home.packages = with pkgs; [
-    aspell
-    automake
-    bat
-    btop
-    cargo-update
-    cmake
-    codex
-    coreutils
-    emacs
-    eza
-    fd
-    fzf
-    gcc
-    gawk
-    gnugrep
-    gnused
-    gnumake
-    gnutar
-    jq
-    libtool
-    neovim
-    nixpkgs-fmt
-    nmap
-    nodejs_22
-    openvpn
-    pkg-config
-    poppler
-    ripgrep
-    skim
-    starship
-    stow
-    texinfo
-    tmux
-    tree
-    yubikey-manager
-    wezterm
-    zoxide
+  home.packages = commonPkgs ++ macPkgs
+    ++ lib.optionals (pkgs.mu ? emacs) [ pkgs.mu.emacs ]
+    ++ lib.optionals (pkgs ? mu4e) [ pkgs.mu4e ]
+    ++ [
     (pkgs.writeShellApplication {
       name = "ns";
       runtimeInputs = with pkgs; [
@@ -87,6 +102,10 @@ in
 
   home.file.".bash_profile" = {
     source = create_symlink "${dotfiles}/bash/.bash_profile";
+  };
+
+  home.file.".zshrc" = {
+    source = create_symlink "${dotfiles}/zsh/.zshrc";
   };
 
   # Provide legacy Doom path expected by some setups/tools.

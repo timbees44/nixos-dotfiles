@@ -8,6 +8,25 @@
   # Match existing local Nix install's nixbld group ID.
   ids.gids.nixbld = 350;
 
+  # Decrypt agenix secrets using this machine's age identity key.
+  age.identityPaths = [ "/Users/tim/.config/age/keys.txt" ];
+  age.secrets = {
+    mbsyncrc = {
+      file = ../../secrets/mbsyncrc.age;
+      path = "/Users/tim/.config/isync/mbsyncrc";
+      owner = "tim";
+      group = "staff";
+      mode = "0400";
+    };
+    msmtp-config = {
+      file = ../../secrets/msmtp-config.age;
+      path = "/Users/tim/.config/msmtp/config";
+      owner = "tim";
+      group = "staff";
+      mode = "0400";
+    };
+  };
+
   # Core Nix daemon/client behavior on macOS.
   nix = {
     settings = {
@@ -61,10 +80,13 @@
 
     taps = [
       "d12frosted/emacs-plus"
+      "felixkratz/formulae"
     ];
     # Keep only Brew-specific packages here; prefer nixpkgs for CLI tools.
     brews = [
       "d12frosted/emacs-plus/emacs-plus@30"
+      "felixkratz/formulae/sketchybar"
+      "mu"
     ];
     casks = [ ];
     masApps = { };
