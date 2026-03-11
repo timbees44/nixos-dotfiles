@@ -18,6 +18,8 @@ export PATH="$HOME/.emacs.d/bin:$PATH"
 
 # Export local/bin
 export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.nix-profile/bin:$PATH"
+export PATH="/etc/profiles/per-user/tim/bin:$PATH"
 export PATH="/run/current-system/sw/bin:$PATH"
 
 # Export cargo path

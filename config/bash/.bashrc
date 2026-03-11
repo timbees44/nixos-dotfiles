@@ -95,4 +95,6 @@ n() { if [ "$#" -eq 0 ]; then nvim .; else nvim "$@"; fi; }
 alias ll='ls -la'
 export PATH="$HOME/.opencode/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.nix-profile/bin:$PATH"
+export PATH="/etc/profiles/per-user/tim/bin:$PATH"
 export SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
