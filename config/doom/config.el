@@ -114,9 +114,12 @@
 ;; Use decrypted mail configs managed by agenix.
 (after! mu4e
   (setq mu4e-maildir "~/.mail"
-        mu4e-get-mail-command "mbsync -c ~/.config/isync/mbsyncrc gmail"
+        mu4e-get-mail-command
+        "/etc/profiles/per-user/tim/bin/mbsync -c ~/.config/isync/mbsyncrc gmail"
         mu4e-update-interval 300
-        sendmail-program (or (executable-find "msmtp") "/usr/bin/msmtp")
+        sendmail-program
+        (or (executable-find "msmtp")
+            "/etc/profiles/per-user/tim/bin/msmtp")
         message-send-mail-function #'message-send-mail-with-sendmail
         message-sendmail-f-is-evil t
         message-sendmail-extra-arguments
