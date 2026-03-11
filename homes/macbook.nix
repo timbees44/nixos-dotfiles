@@ -10,6 +10,7 @@ let
   configs = {
     aerospace = "aerospace";
     doom = "doom";
+    karabiner = "karabiner";
     nvim = "nvim";
     sketchybar = "sketchybar";
     starship = "starship";
