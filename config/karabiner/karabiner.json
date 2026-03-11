@@ -1,0 +1,76 @@
+{
+  "global": {
+    "check_for_updates_on_startup": true,
+    "show_in_menu_bar": true,
+    "show_profile_name_in_menu_bar": false
+  },
+  "profiles": [
+    {
+      "name": "Default profile",
+      "selected": true,
+      "simple_modifications": [],
+      "fn_function_keys": [],
+      "complex_modifications": {
+        "rules": [
+          {
+            "description": "Swap right_command and right_option (leave left_option unchanged)",
+            "manipulators": [
+              {
+                "type": "basic",
+                "from": {
+                  "key_code": "right_command",
+                  "modifiers": {
+                    "optional": [
+                      "any"
+                    ]
+                  }
+                },
+                "to": [
+                  {
+                    "key_code": "right_option"
+                  }
+                ]
+              },
+              {
+                "type": "basic",
+                "from": {
+                  "key_code": "right_option",
+                  "modifiers": {
+                    "optional": [
+                      "any"
+                    ]
+                  }
+                },
+                "to": [
+                  {
+                    "key_code": "right_command"
+                  }
+                ]
+              },
+              {
+                "type": "basic",
+                "from": {
+                  "key_code": "right_option",
+                  "modifiers": {
+                    "optional": [
+                      "any"
+                    ]
+                  }
+                },
+                "to": [
+                  {
+                    "key_code": "right_command"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "virtual_hid_keyboard": {
+        "keyboard_type_v2": "ansi",
+        "caps_lock_delay_milliseconds": 0
+      }
+    }
+  ]
+}
