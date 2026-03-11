@@ -86,11 +86,28 @@
     brews = [
       "d12frosted/emacs-plus/emacs-plus@30"
       "felixkratz/formulae/sketchybar"
-      "kanata"
       "mu"
     ];
-    casks = [ ];
+    casks = [
+      "karabiner-elements"
+    ];
     masApps = { };
+  };
+
+  # Start Karabiner-Elements at login.
+  launchd.user.agents.karabiner-elements = {
+    serviceConfig = {
+      Label = "local.karabiner-elements";
+      ProgramArguments = [
+        "/usr/bin/open"
+        "-a"
+        "Karabiner-Elements"
+      ];
+      KeepAlive = false;
+      RunAtLoad = true;
+      StandardOutPath = "/tmp/karabiner-elements.out.log";
+      StandardErrorPath = "/tmp/karabiner-elements.err.log";
+    };
   };
 
   # Required by newer nix-darwin for user-scoped defaults writes.
