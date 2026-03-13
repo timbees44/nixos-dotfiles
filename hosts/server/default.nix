@@ -38,6 +38,10 @@ in
     KbdInteractiveAuthentication = false;
   };
 
+  # Tailscale node service. Initial auth can be done once with `tailscale up`
+  # or later wired to an auth key file managed by agenix.
+  services.tailscale.enable = true;
+
   hardware.graphics = {
     enable = true;
     extraPackages = with pkgs; [ pkgs.vulkan-validation-layers ];
