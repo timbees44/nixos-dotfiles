@@ -2,6 +2,7 @@
 with lib;
 let
   cfg = config.services.homelab;
+  hasFrigateSecret = config.age.secrets ? frigate-reolink-env;
   fqdn = sub: "${sub}.${cfg.domain}";
   proxyBlock = port: extra: ''
     tls internal
@@ -20,6 +21,14 @@ ${lines}
     "${fqdn "jellyfin"}" = simpleProxy 8096;
     "${fqdn "audiobookshelf"}" = simpleProxy 13378;
     "${fqdn "calibre"}" = simpleProxy 8083;
+    "${fqdn "frigate"}" = simpleProxy 5000;
+    "${fqdn "homeassistant"}" = {
+      extraConfig = proxyWithBlock 8123 ''
+      header_up Host {host}
+      header_up X-Forwarded-For {remote_host}
+      header_up X-Forwarded-Proto {scheme}
+    '';
+    };
     "${fqdn "immich"}" = {
       extraConfig = proxyWithBlock 2283 ''
       header_up X-Forwarded-For {remote_host}
@@ -123,6 +132,134 @@ in {
       openFirewall = false;
     };
 
+    services.mosquitto = {
+      enable = true;
+      listeners = [
+        {
+          address = "127.0.0.1";
+          port = 1883;
+          acl = [ "pattern readwrite #" ];
+          omitPasswordAuth = true;
+          settings.allow_anonymous = true;
+        }
+      ];
+    };
+
+    services.home-assistant = {
+      enable = true;
+      configDir = "/var/lib/hass";
+      extraComponents = [ "ffmpeg" "mqtt" "stream" ];
+      customComponents = with pkgs.home-assistant-custom-components; [ frigate ];
+      config = {
+        default_config = { };
+        homeassistant = {
+          name = "Home Server";
+          time_zone = cfg.timezone;
+          unit_system = "metric";
+          country = "GB";
+        };
+        http = {
+          server_port = 8123;
+          use_x_forwarded_for = true;
+          trusted_proxies = [ "127.0.0.1" "::1" cfg.proxyAddress ];
+          ip_ban_enabled = true;
+          login_attempts_threshold = 5;
+        };
+        mqtt = {
+          broker = "127.0.0.1";
+          port = 1883;
+        };
+        ffmpeg = { };
+        stream = { };
+      };
+    };
+
+    systemd.services.home-assistant.serviceConfig.SupplementaryGroups = [ "video" "render" ];
+
+    environment.etc = {
+      "frigate/config.yml".text = ''
+        mqtt:
+          enabled: true
+          host: 127.0.0.1
+          port: 1883
+
+        birdseye:
+          enabled: true
+
+        ffmpeg:
+          hwaccel_args: preset-vaapi
+          output_args:
+            record: preset-record-generic-audio-aac
+
+        detectors:
+          ov:
+            type: openvino
+            device: GPU
+
+        model:
+          width: 300
+          height: 300
+          input_tensor: nhwc
+          input_pixel_format: bgr
+          path: /openvino-model/ssdlite_mobilenet_v2.xml
+          labelmap_path: /openvino-model/coco_91cl_bkgr.txt
+
+        record:
+          enabled: true
+          retain:
+            days: 7
+            mode: motion
+          alerts:
+            retain:
+              days: 30
+              mode: motion
+          detections:
+            retain:
+              days: 30
+              mode: motion
+
+        snapshots:
+          enabled: true
+          retain:
+            default: 30
+
+        go2rtc:
+          streams:
+            reolink_main:
+              - rtsp://{FRIGATE_REOLINK_USER}:{FRIGATE_REOLINK_PASSWORD}@{FRIGATE_REOLINK_HOST}:554/h264Preview_01_main
+            reolink_sub:
+              - rtsp://{FRIGATE_REOLINK_USER}:{FRIGATE_REOLINK_PASSWORD}@{FRIGATE_REOLINK_HOST}:554/h264Preview_01_sub
+
+        cameras:
+          reolink_poe:
+            ffmpeg:
+              inputs:
+                - path: rtsp://127.0.0.1:8554/reolink_sub
+                  input_args: preset-rtsp-restream
+                  roles:
+                    - detect
+                - path: rtsp://127.0.0.1:8554/reolink_main
+                  input_args: preset-rtsp-restream
+                  roles:
+                    - record
+            detect:
+              width: 1280
+              height: 720
+              fps: 5
+            objects:
+              track:
+                - person
+                - car
+                - dog
+                - cat
+      '';
+      "frigate/frigate.env.example".text = ''
+        FRIGATE_REOLINK_HOST=192.168.1.50
+        FRIGATE_REOLINK_USER=admin
+        FRIGATE_REOLINK_PASSWORD=replace-me
+      '';
+    };
+
     services.caddy = {
       enable = true;
       virtualHosts = caddyVirtualHosts;
@@ -140,11 +277,14 @@ in {
       (mediaSubdirRule "books-ingest")
       (mediaSubdirRule "audiobooks")
       (mediaSubdirRule "photos")
+      (ensureDir "${cfg.mediaDir}/security" cfg.user "media" "0755")
+      (ensureDir "${cfg.mediaDir}/security/frigate" cfg.user "media" "0755")
       (ensureDir calibreConfigDir cfg.user "media" "0755")
       (ensureDir "${calibreConfigDir}/config" cfg.user "media" "0755")
       (ensureDir "/var/lib/immich" "immich" "immich" "0750")
       (ensureDir "/var/lib/immich/library" "immich" "immich" "0750")
       (ensureDir "/var/lib/immich/upload" "immich" "immich" "0750")
+      (ensureDir "/var/cache/frigate" "root" "root" "0755")
     ];
 
     virtualisation.podman = {
@@ -169,6 +309,29 @@ in {
         CALIBRE_LIBRARY_PATH = "/calibre-library";
         METADATA_UPDATE = "true";
       };
+    };
+
+    virtualisation.oci-containers.containers.frigate = {
+      image = "ghcr.io/blakeblackshear/frigate:stable";
+      autoStart = hasFrigateSecret;
+      ports = [ "${cfg.proxyAddress}:5000:5000" ];
+      volumes = [
+        "/etc/localtime:/etc/localtime:ro"
+        "/etc/frigate:/config:ro"
+        "${cfg.mediaDir}/security/frigate:/media/frigate"
+        "/var/cache/frigate:/tmp/cache"
+      ];
+      environment = {
+        LIBVA_DRIVER_NAME = "iHD";
+        FRIGATE_RTSP_PASSWORD = "";
+      };
+      environmentFiles = optionals hasFrigateSecret [
+        config.age.secrets.frigate-reolink-env.path
+      ];
+      extraOptions = [
+        "--device=/dev/dri:/dev/dri"
+        "--shm-size=256m"
+      ];
     };
 
     networking.firewall.allowedTCPPorts = mkBefore [ 80 443 ];

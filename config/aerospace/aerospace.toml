@@ -42,9 +42,9 @@ gaps.outer.right = 5
 gaps.outer.bottom = 5
 gaps.outer.top = [
     { monitor."built-in" = 10 },
-    { monitor.main = 5  }, # sketchybar height is 37 + 10 padding
-    { monitor.secondary = 10 },
-    20,
+    { monitor.main = 36 },      # 34px bar + a small margin on external displays
+    { monitor.secondary = 36 },
+    42,
 ]
 
 

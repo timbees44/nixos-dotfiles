@@ -90,6 +90,7 @@
     ];
     casks = [
       "karabiner-elements"
+      "vlc"
     ];
     masApps = { };
   };
