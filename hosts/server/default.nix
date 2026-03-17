@@ -1,6 +1,7 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 let
   lanInterface = "enp58s0u1u2"; # primary ethernet NIC
+  frigateSecretFile = ../../secrets/frigate-reolink-env.age;
   lidBacklightScript = pkgs.writeShellScript "lid-backlight.sh" ''
     state=$(cat /proc/acpi/button/lid/*/state)
     if echo "$state" | grep -q closed; then
@@ -21,6 +22,16 @@ in
   imports = [
     ./hardware-configuration.nix
   ];
+
+  age.secrets = lib.optionalAttrs (builtins.pathExists frigateSecretFile) {
+    frigate-reolink-env = {
+      file = frigateSecretFile;
+      path = "/run/agenix/frigate-reolink-env";
+      owner = "root";
+      group = "root";
+      mode = "0400";
+    };
+  };
 
   services.homelab = {
     enable = true;
@@ -101,6 +112,8 @@ in
         "syncthing.lan"
         "audiobookshelf.lan"
         "calibre.lan"
+        "frigate.lan"
+        "homeassistant.lan"
         "immich.lan"
         "photos.lan"
       ];
@@ -127,6 +140,8 @@ in
       server = [ "1.1.1.1" "1.0.0.1" ];
       address = [
         "/jellyfin.lan/192.168.1.67"
+        "/frigate.lan/192.168.1.67"
+        "/homeassistant.lan/192.168.1.67"
         "/immich.lan/192.168.1.67"
         "/syncthing.lan/192.168.1.67"
         "/audiobookshelf.lan/192.168.1.67"
