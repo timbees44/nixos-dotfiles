@@ -127,6 +127,8 @@ in
         13378 # audiobookshelf
         8083 # calibre
         2283 # immich
+        5000 # frigate
+        8123 # ha
       ];
       allowedUDPPorts = [ 53 ];
     };
