@@ -165,10 +165,6 @@ in {
           ip_ban_enabled = true;
           login_attempts_threshold = 5;
         };
-        mqtt = {
-          broker = "127.0.0.1";
-          port = 1883;
-        };
         ffmpeg = { };
         stream = { };
       };
