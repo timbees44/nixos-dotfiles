@@ -177,7 +177,7 @@ in {
     systemd.services.home-assistant.serviceConfig.SupplementaryGroups = [ "video" "render" ];
 
     environment.etc = {
-      "frigate/config.yml".text = ''
+      "frigate/config.yaml".text = ''
         mqtt:
           enabled: true
           host: 127.0.0.1
@@ -263,9 +263,6 @@ in {
     services.caddy = {
       enable = true;
       virtualHosts = caddyVirtualHosts;
-      extraConfig = ''
-        bind ${cfg.proxyAddress}
-      '';
     };
 
     systemd.tmpfiles.rules = [
@@ -279,6 +276,7 @@ in {
       (mediaSubdirRule "photos")
       (ensureDir "${cfg.mediaDir}/security" cfg.user "media" "0755")
       (ensureDir "${cfg.mediaDir}/security/frigate" cfg.user "media" "0755")
+      (ensureDir "${cfg.mediaDir}/security/frigate/config" "root" "root" "0755")
       (ensureDir calibreConfigDir cfg.user "media" "0755")
       (ensureDir "${calibreConfigDir}/config" cfg.user "media" "0755")
       (ensureDir "/var/lib/immich" "immich" "immich" "0750")
@@ -317,7 +315,7 @@ in {
       ports = [ "${cfg.proxyAddress}:5000:5000" ];
       volumes = [
         "/etc/localtime:/etc/localtime:ro"
-        "/etc/frigate:/config:ro"
+        "${cfg.mediaDir}/security/frigate/config:/config"
         "${cfg.mediaDir}/security/frigate:/media/frigate"
         "/var/cache/frigate:/tmp/cache"
       ];
@@ -333,6 +331,11 @@ in {
         "--shm-size=256m"
       ];
     };
+
+    systemd.services.podman-frigate.preStart = ''
+      install -d -m 0755 ${cfg.mediaDir}/security/frigate/config
+      install -m 0644 /etc/frigate/config.yaml ${cfg.mediaDir}/security/frigate/config/config.yaml
+    '';
 
     networking.firewall.allowedTCPPorts = mkBefore [ 80 443 ];
 
