@@ -188,17 +188,8 @@ in {
             record: preset-record-generic-audio-aac
 
         detectors:
-          ov:
-            type: openvino
-            device: CPU
-
-        model:
-          width: 300
-          height: 300
-          input_tensor: nhwc
-          input_pixel_format: bgr
-          path: /openvino-model/ssdlite_mobilenet_v2.xml
-          labelmap_path: /openvino-model/coco_91cl_bkgr.txt
+          cpu1:
+            type: cpu
 
         record:
           enabled: true
