@@ -221,7 +221,7 @@ in {
           reolink_poe:
             ffmpeg:
               inputs:
-                - path: rtsp://127.0.0.1:8554/reolink_sub
+                - path: rtsp://127.0.0.1:8554/reolink_main
                   input_args: preset-rtsp-restream
                   roles:
                     - detect
