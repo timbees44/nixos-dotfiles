@@ -149,9 +149,31 @@ in {
       enable = true;
       configDir = "/var/lib/hass";
       extraComponents = [ "ffmpeg" "mqtt" "stream" ];
+      extraPackages = python3Packages: [ python3Packages.reolink_aio ];
       customComponents = with pkgs.home-assistant-custom-components; [ frigate ];
       config = {
-        default_config = { };
+        assist_pipeline = { };
+        backup = { };
+        config = { };
+        conversation = { };
+        dhcp = { };
+        energy = { };
+        go2rtc = { };
+        history = { };
+        homeassistant_alerts = { };
+        cloud = { };
+        image_upload = { };
+        logbook = { };
+        media_source = { };
+        mobile_app = { };
+        my = { };
+        ssdp = { };
+        stream = { };
+        sun = { };
+        usage_prediction = { };
+        usb = { };
+        webhook = { };
+        zeroconf = { };
         homeassistant = {
           name = "Home Server";
           time_zone = cfg.timezone;
@@ -166,7 +188,6 @@ in {
           login_attempts_threshold = 5;
         };
         ffmpeg = { };
-        stream = { };
       };
     };
 
@@ -239,6 +260,7 @@ in {
                   roles:
                     - record
             detect:
+              enabled: true
               width: 1280
               height: 720
               fps: 5
