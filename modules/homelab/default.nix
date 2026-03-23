@@ -152,6 +152,7 @@ in {
       extraPackages = python3Packages: [
         python3Packages.reolink-aio
         python3Packages.universal-silabs-flasher
+        python3Packages.zha
       ];
       customComponents = with pkgs.home-assistant-custom-components; [ frigate ];
       config = {
