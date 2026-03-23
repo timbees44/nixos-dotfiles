@@ -149,7 +149,10 @@ in {
       enable = true;
       configDir = "/var/lib/hass";
       extraComponents = [ "ffmpeg" "mqtt" "stream" ];
-      extraPackages = python3Packages: [ python3Packages.reolink-aio ];
+      extraPackages = python3Packages: [
+        python3Packages.reolink-aio
+        python3Packages.universal-silabs-flasher
+      ];
       customComponents = with pkgs.home-assistant-custom-components; [ frigate ];
       config = {
         default_config = { };
