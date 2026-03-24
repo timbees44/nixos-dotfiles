@@ -158,6 +158,9 @@ in {
       customComponents = with pkgs.home-assistant-custom-components; [ frigate ];
       config = {
         default_config = { };
+        automation = "!include automations.yaml";
+        script = "!include scripts.yaml";
+        scene = "!include scenes.yaml";
         homeassistant = {
           name = "Home Server";
           time_zone = cfg.timezone;
