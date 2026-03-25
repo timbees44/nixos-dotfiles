@@ -102,7 +102,7 @@ in {
       cacheDir = lib.mkDefault "/var/cache/jellyfin";
     };
 
-    systemd.services.jellyfin.serviceConfig.SupplementaryGroups = [ "video" "render" ];
+    systemd.services.jellyfin.serviceConfig.SupplementaryGroups = [ "video" "render" "dialout" ];
 
     services.immich = {
       enable = true;
