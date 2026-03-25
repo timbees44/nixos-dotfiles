@@ -102,7 +102,7 @@ in {
       cacheDir = lib.mkDefault "/var/cache/jellyfin";
     };
 
-    systemd.services.jellyfin.serviceConfig.SupplementaryGroups = [ "video" "render" "dialout" ];
+    systemd.services.jellyfin.serviceConfig.SupplementaryGroups = [ "video" "render" ];
 
     services.immich = {
       enable = true;
@@ -178,7 +178,7 @@ in {
       };
     };
 
-    systemd.services.home-assistant.serviceConfig.SupplementaryGroups = [ "video" "render" ];
+    systemd.services.home-assistant.serviceConfig.SupplementaryGroups = [ "video" "render" "dialout" ];
 
     environment.etc = {
       "frigate/config.yaml".text = ''
