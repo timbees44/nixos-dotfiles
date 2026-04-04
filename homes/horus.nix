@@ -9,11 +9,11 @@ let
     hypr = "hypr";
     nvim = "nvim";
     starship = "starship";
+    swaylock = "swaylock";
     tmux = "tmux";
     waybar = "waybar";
     wezterm = "wezterm";
     wofi = "wofi";
-    swaylock = "swaylock";
   };
 in
 {
@@ -34,11 +34,11 @@ in
 
   home.packages = (with pkgs; [
     bat
-		brave
-		btop
-		cmake
+    brave
+    btop
+    cmake
     codex
-		deluge
+    deluge
     emacs
     eza
     fd
@@ -46,7 +46,6 @@ in
     gcc
     gnumake
     hypridle
-    hyprpaper
     isync
     jq
     msmtp
@@ -86,7 +85,7 @@ in
   };
 
   xdg.configFile = builtins.mapAttrs
-    (name: subpath: {
+    (_name: subpath: {
       source = create_symlink "${dotfiles}/${subpath}";
       recursive = true;
     })
@@ -116,5 +115,4 @@ in
       "$doomBin" sync || true
     fi
   '';
-
 }

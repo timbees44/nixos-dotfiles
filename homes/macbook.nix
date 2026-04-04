@@ -33,6 +33,7 @@ let
     fzf
     gcc
     gawk
+    gnupg
     gnugrep
     gnused
     gnumake
@@ -107,6 +108,10 @@ in
 
   home.file.".zshrc" = {
     source = create_symlink "${dotfiles}/zsh/.zshrc";
+  };
+
+  home.file.".zprofile" = {
+    source = create_symlink "${dotfiles}/zsh/.zprofile";
   };
 
   # Provide legacy Doom path expected by some setups/tools.

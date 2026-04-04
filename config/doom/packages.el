@@ -52,3 +52,8 @@
 ;; (unpin! pinned-package another-pinned-package)
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;; (unpin! t)
+
+(package! ai-code
+  :recipe (:host github :repo "tninja/ai-code-interface.el"))
+
+(package! catppuccin-theme)

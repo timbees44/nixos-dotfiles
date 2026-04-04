@@ -43,6 +43,11 @@ in
     proxyAddress = "127.0.0.1";
   };
 
+  fileSystems."/srv/media" = {
+    device = "/dev/disk/by-uuid/2c4c362c-0cce-4985-837d-4b63fae25786";
+    fsType = "ext4";
+  };
+
   services.openssh.settings = {
     PermitRootLogin = "no";
     PasswordAuthentication = true;

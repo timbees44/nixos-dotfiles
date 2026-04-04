@@ -211,16 +211,27 @@ in {
         record:
           enabled: true
           retain:
-            days: 7
-            mode: motion
+            days: 0
           alerts:
+            pre_capture: 2
+            post_capture: 3
             retain:
-              days: 30
-              mode: motion
+              days: 5
+              mode: active_objects
           detections:
+            pre_capture: 2
+            post_capture: 3
             retain:
-              days: 30
-              mode: motion
+              days: 5
+              mode: active_objects
+
+        review:
+          alerts:
+            labels:
+              - person
+          detections:
+            labels:
+              - person
 
         snapshots:
           enabled: true
@@ -254,9 +265,6 @@ in {
             objects:
               track:
                 - person
-                - car
-                - dog
-                - cat
       '';
       "frigate/frigate.env.example".text = ''
         FRIGATE_REOLINK_HOST=192.168.1.50

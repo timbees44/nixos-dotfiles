@@ -87,6 +87,13 @@
           hmConfig = ./homes/laptop.nix;
         };
 
+        horus = mkHost {
+          modules = [
+            ./hosts/horus/default.nix
+          ];
+          hmConfig = ./homes/horus.nix;
+        };
+
         server = mkHost {
           modules = [
             ./modules/homelab

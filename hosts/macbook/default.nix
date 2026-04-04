@@ -62,7 +62,15 @@
   security.pam.services.sudo_local.touchIdAuth = true;
 
   environment.systemPackages = with pkgs; [
+    cmake
+    fd
+    fzf
     git
+    neovim
+    nmap
+    nodejs
+    openvpn
+    sqlite
     vim
     wget
   ];
@@ -81,6 +89,7 @@
     taps = [
       "d12frosted/emacs-plus"
       "felixkratz/formulae"
+      "nikitabobko/tap"
     ];
     # Keep only Brew-specific packages here; prefer nixpkgs for CLI tools.
     brews = [
@@ -89,7 +98,11 @@
       "mu"
     ];
     casks = [
+      "codex"
       "karabiner-elements"
+      "mos"
+      "nikitabobko/tap/aerospace"
+      "skim"
       "vlc"
     ];
     masApps = { };

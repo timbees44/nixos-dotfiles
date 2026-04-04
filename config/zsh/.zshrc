@@ -1,29 +1,22 @@
-#!/bin/bash
+if [ -r "$HOME/.zprofile" ]; then
+  source "$HOME/.zprofile"
+fi
 
-#starship
-eval "$(starship init zsh)"
+# starship
+if command -v starship >/dev/null 2>&1; then
+  eval "$(starship init zsh)"
+fi
 # starship config
 export STARSHIP_CONFIG=~/.config/starship/starship.toml
 
 # Key stuff
-export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
+if command -v gpgconf >/dev/null 2>&1; then
+  export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
+fi
 
 # Enable colors for ls and related commands
 export CLICOLOR=1
 export LSCOLORS=GxFxCxDxBxegedabagacad
-
-# Export doomemacs bin path
-export PATH="$PATH:~/.config/emacs/bin"
-export PATH="$HOME/.emacs.d/bin:$PATH"
-
-# Export local/bin
-export PATH="$HOME/.local/bin:$PATH"
-export PATH="$HOME/.nix-profile/bin:$PATH"
-export PATH="/etc/profiles/per-user/tim/bin:$PATH"
-export PATH="/run/current-system/sw/bin:$PATH"
-
-# Export cargo path
-export PATH="$HOME/.cargo/bin:$PATH"
 
 if [[ -f "/opt/homebrew/bin/brew" ]] then
   # If you're using macOS, you'll want this enabled
@@ -106,5 +99,10 @@ alias dot="cd ~/.dotfiles/"
 alias htb="cd ~/projects/htb/"
 
 # Shell integrations
-eval "$(fzf --zsh)"
-eval "$(zoxide init --cmd cd zsh)"
+if command -v fzf >/dev/null 2>&1; then
+  eval "$(fzf --zsh)"
+fi
+
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init --cmd cd zsh)"
+fi
