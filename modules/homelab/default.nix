@@ -229,12 +229,21 @@ in {
           alerts:
             labels:
               - person
+            required_zones:
+              - people_drive
+              - people_front
           detections:
             labels:
               - person
+            required_zones:
+              - people_drive
+              - people_front
 
         snapshots:
           enabled: true
+          required_zones:
+            - people_drive
+            - people_front
           retain:
             default: 30
 
@@ -265,6 +274,19 @@ in {
             objects:
               track:
                 - person
+            zones:
+              people_drive:
+                coordinates: 0,0.342,0.383,0.491,0.505,1,0.001,0.999
+                loitering_time: 0
+                objects:
+                  - person
+                friendly_name: People Drive
+              people_front:
+                coordinates: 0.869,0.36,0.998,0.534,1,0.998,0.505,1,0.384,0.497
+                loitering_time: 0
+                objects:
+                  - person
+                friendly_name: People Front
       '';
       "frigate/frigate.env.example".text = ''
         FRIGATE_REOLINK_HOST=192.168.1.50
