@@ -57,3 +57,4 @@
   :recipe (:host github :repo "tninja/ai-code-interface.el"))
 
 (package! catppuccin-theme)
+(package! org-modern)
