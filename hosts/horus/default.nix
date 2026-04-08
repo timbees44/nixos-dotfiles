@@ -22,6 +22,7 @@ in
       backend = "wpa_supplicant";
     };
   };
+  services.xserver.videoDrivers = [ "nvidia" ];
 
   # Bootstrap cleanly without secrets; once the age key exists, a rebuild
   # enables the encrypted mail config automatically.
