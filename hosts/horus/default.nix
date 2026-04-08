@@ -2,6 +2,9 @@
 let
   timAgeKey = "/home/tim/.config/age/keys.txt";
   hasTimAgeKey = builtins.pathExists timAgeKey;
+  dwlPatches = builtins.filter
+    (path: lib.hasSuffix ".patch" (toString path))
+    (lib.filesystem.listFilesRecursive ./dwl/patches);
 in
 
 {
@@ -42,7 +45,14 @@ in
 
   time.timeZone = "Europe/London";
 
-  programs.dwl.enable = true;
+  programs.dwl = {
+    enable = true;
+    package = (pkgs.dwl.override {
+      configH = ./dwl/config.h;
+    }).overrideAttrs (old: {
+      patches = (old.patches or [ ]) ++ dwlPatches;
+    });
+  };
   programs.dconf.enable = true;
   programs.steam.enable = true;
   programs.gamemode.enable = true;

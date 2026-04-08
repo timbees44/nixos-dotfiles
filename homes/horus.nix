@@ -62,6 +62,7 @@ in
     swaylock-effects
     tmux
     tree
+    wlr-randr
     wmenu
     zoxide
     (pkgs.writeShellApplication {

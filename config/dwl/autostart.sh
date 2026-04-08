@@ -23,6 +23,10 @@ systemctl --user import-environment \
   XDG_SESSION_TYPE \
   DBUS_SESSION_BUS_ADDRESS >/dev/null 2>&1 || true
 
+if [ -x "$HOME/.config/dwl/display.sh" ]; then
+  "$HOME/.config/dwl/display.sh" >/dev/null 2>&1 || true
+fi
+
 swaybg -c "#1d2021" &
 bg_pid=$!
 
