@@ -6,14 +6,12 @@ let
 
   configs = {
     doom = "doom";
-    hypr = "hypr";
+    dwl = "dwl";
+    foot = "foot";
     nvim = "nvim";
     starship = "starship";
     swaylock = "swaylock";
     tmux = "tmux";
-    waybar = "waybar";
-    wezterm = "wezterm";
-    wofi = "wofi";
   };
 in
 {
@@ -34,34 +32,36 @@ in
 
   home.packages = (with pkgs; [
     bat
+    bluetui
     brave
     btop
     cmake
     codex
     deluge
+    dwl
+    dwlb
     emacs
     eza
     fd
+    foot
     fzf
     gcc
     gnumake
-    hypridle
     isync
     jq
     msmtp
-    mu
     neovim
     nitch
     nixpkgs-fmt
     pcmanfm
     ripgrep
     starship
+    swaybg
+    swayidle
     swaylock-effects
     tmux
     tree
-    waybar
-    wezterm
-    wofi
+    wmenu
     zoxide
     (pkgs.writeShellApplication {
       name = "ns";
@@ -73,8 +73,7 @@ in
       ];
       text = ''exec "${pkgs.nix-search-tv.src}/nixpkgs.sh" "$@"'';
     })
-  ]) ++ lib.optionals (pkgs.mu ? emacs) [ pkgs.mu.emacs ]
-    ++ lib.optionals (pkgs ? mu4e) [ pkgs.mu4e ];
+  ]);
 
   home.file.".bashrc" = {
     source = create_symlink "${dotfiles}/bash/.bashrc";
@@ -82,6 +81,10 @@ in
 
   home.file.".bash_profile" = {
     source = create_symlink "${dotfiles}/bash/.bash_profile";
+  };
+
+  home.file.".local/bin/lock" = {
+    source = create_symlink "${dotfiles}/dwl/lock.sh";
   };
 
   xdg.configFile = builtins.mapAttrs

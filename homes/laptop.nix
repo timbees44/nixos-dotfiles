@@ -34,6 +34,7 @@ in
 
   home.packages = (with pkgs; [
     bat
+    bluetui
 		brave
 		btop
 		cmake

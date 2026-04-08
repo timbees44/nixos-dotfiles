@@ -37,27 +37,28 @@
 
   time.timeZone = "Europe/London";
 
-  services.xserver.enable = true;
-  services.xserver.videoDrivers = [ "nvidia" ];
-  services.displayManager.sddm = {
-    enable = true;
-    wayland.enable = true;
-  };
-  services.displayManager.defaultSession = "hyprland-uwsm";
+  programs.dwl.enable = true;
+  programs.steam.enable = true;
+  programs.gamemode.enable = true;
+  programs.xwayland.enable = true;
+  hardware.steam-hardware.enable = true;
   services.mullvad-vpn = {
     enable = true;
     package = pkgs.mullvad-vpn;
   };
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    wireplumber.enable = true;
+  };
   services.udisks2.enable = true;
   services.gvfs.enable = true;
 
-  programs.hyprland = {
-    enable = true;
-    xwayland.enable = true;
-    withUWSM = true;
-  };
-
   security.polkit.enable = true;
+  security.rtkit.enable = true;
+  security.pam.services.swaylock = { };
 
   hardware.graphics = {
     enable = true;
@@ -83,6 +84,14 @@
     GBM_BACKEND = "nvidia-drm";
     __GLX_VENDOR_LIBRARY_NAME = "nvidia";
     NVD_BACKEND = "direct";
+    XDG_CURRENT_DESKTOP = "dwl";
+    XDG_SESSION_DESKTOP = "dwl";
+    XDG_SESSION_TYPE = "wayland";
+  };
+
+  xdg.portal = {
+    enable = true;
+    xdgOpenUsePortal = true;
   };
 
   users.users.tim = {
@@ -97,8 +106,11 @@
     cmake
     gnumake
     gcc
+    bluez
+    bluez-tools
     pkg-config
     libtool
+    mangohud
     unzip
     gnutar
   ];

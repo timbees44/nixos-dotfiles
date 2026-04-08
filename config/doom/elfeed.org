@@ -11,4 +11,4 @@
 ** [[https://www.theregister.com/security/headlines.atom][The Register Security]]
 ** [[https://snyk.io/blog/feed/][Snyk Blog]]
 ** [[https://www.cisa.gov/cybersecurity-advisories/all.xml][CISA Cybersecurity Advisories]]
-** [[https://www.cshub.com/rss/categories/attacks][CSHub Attacks]]
+** [[https://www.cshub.com/rss/categories/attacks][CSHub Attamcks]]

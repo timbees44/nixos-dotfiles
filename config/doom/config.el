@@ -26,8 +26,16 @@
 (defvar tn/locate-search-root (expand-file-name "~")
   "Root directory searched by the custom `locate' command.")
 
+(defun tn/locate-backend-command ()
+  "Return the preferred search backend for file lookup commands."
+  (cond
+   ((executable-find "fd"))
+   ((and (eq system-type 'darwin) (executable-find "mdfind")))
+   ((executable-find "find"))
+   (t nil)))
+
 (defun tn/locate-make-command-line (search-string)
-  "Build a cross-platform command line for `locate' using fd or find."
+  "Build a cross-platform command line for `locate' using fd, mdfind, or find."
   (cond
    ((executable-find "fd")
     (list (executable-find "fd")
@@ -38,15 +46,48 @@
           "--follow"
           search-string
           tn/locate-search-root))
+   ((and (eq system-type 'darwin) (executable-find "mdfind"))
+    (list (executable-find "mdfind")
+          "-onlyin" tn/locate-search-root
+          "-name" search-string))
    ((executable-find "find")
     (list (executable-find "find")
           tn/locate-search-root
           "(" "-type" "f" "-o" "-type" "l" ")"
           "-iname" (format "*%s*" search-string)))
    (t
-    (error "Neither fd nor find is available for locate"))))
+    (error "Neither fd, mdfind, nor find is available for locate"))))
 
-(setq locate-make-command-line #'tn/locate-make-command-line)
+(after! locate
+  (setq locate-command (or (tn/locate-backend-command)
+                           locate-command))
+  (setq locate-make-command-line #'tn/locate-make-command-line))
+
+(after! consult
+  (when-let ((fd (executable-find "fd")))
+    (setq consult-fd-args
+          (mapconcat #'identity
+                     (list fd
+                           "--color=never"
+                           "--hidden"
+                           "--follow"
+                           "--type" "f"
+                           "--absolute-path")
+                     " ")))
+  ;; Doom's Vertico module remaps `locate' to `consult-locate', so give
+  ;; Consult an explicit backend on macOS instead of falling back to BSD
+  ;; `locate --ignore-case`, which is not supported there.
+  (setq consult-locate-args
+        (cond
+         ((executable-find "fd")
+          consult-fd-args)
+         ((and (eq system-type 'darwin) (executable-find "mdfind"))
+          (mapconcat #'identity
+                     (list (executable-find "mdfind")
+                           "-onlyin" tn/locate-search-root
+                           "-name")
+                     " "))
+         (t consult-locate-args))))
 
 ;; Org
 (setq org-directory "~/Documents/org/")
