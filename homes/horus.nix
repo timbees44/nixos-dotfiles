@@ -6,7 +6,7 @@ let
 
   configs = {
     doom = "doom";
-    dwl = "dwl";
+    hypr = "hypr";
     foot = "foot";
     nvim = "nvim";
     starship = "starship";
@@ -39,8 +39,6 @@ in
     cmake
     codex
     deluge
-    dwl
-    dwlb
     emacs
     eza
     fd
@@ -48,6 +46,7 @@ in
     fzf
     gcc
     gnumake
+    hypridle
     isync
     jq
     msmtp
@@ -57,12 +56,9 @@ in
     pcmanfm
     ripgrep
     starship
-    swaybg
-    swayidle
     swaylock-effects
     tmux
     tree
-    wlr-randr
     wmenu
     zoxide
     (pkgs.writeShellApplication {
@@ -83,10 +79,6 @@ in
 
   home.file.".bash_profile" = {
     source = create_symlink "${dotfiles}/bash/.bash_profile";
-  };
-
-  home.file.".local/bin/lock" = {
-    source = create_symlink "${dotfiles}/dwl/lock.sh";
   };
 
   xdg.configFile = builtins.mapAttrs

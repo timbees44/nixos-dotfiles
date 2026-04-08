@@ -2,17 +2,12 @@
 let
   timAgeKey = "/home/tim/.config/age/keys.txt";
   hasTimAgeKey = builtins.pathExists timAgeKey;
-  dwlPatches = builtins.filter
-    (path: lib.hasSuffix ".patch" (toString path))
-    (lib.filesystem.listFilesRecursive ./dwl/patches);
 in
 
 {
   imports = lib.optional (builtins.pathExists ./hardware-configuration.nix)
     ./hardware-configuration.nix;
 
-  boot.kernelParams = [ "nvidia-drm.modeset=1" ];
-  boot.initrd.kernelModules = [ "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" ];
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -48,18 +43,14 @@ in
 
   time.timeZone = "Europe/London";
 
-  programs.dwl = {
+  programs.hyprland = {
     enable = true;
-    package = (pkgs.dwl.override {
-      configH = ./dwl/config.h;
-    }).overrideAttrs (old: {
-      patches = (old.patches or [ ]) ++ dwlPatches;
-    });
+    xwayland.enable = true;
+    withUWSM = true;
   };
   programs.dconf.enable = true;
   programs.steam.enable = true;
   programs.gamemode.enable = true;
-  programs.xwayland.enable = true;
   hardware.steam-hardware.enable = true;
   services.mullvad-vpn = {
     enable = true;
@@ -103,8 +94,8 @@ in
     GBM_BACKEND = "nvidia-drm";
     __GLX_VENDOR_LIBRARY_NAME = "nvidia";
     NVD_BACKEND = "direct";
-    XDG_CURRENT_DESKTOP = "dwl";
-    XDG_SESSION_DESKTOP = "dwl";
+    XDG_CURRENT_DESKTOP = "Hyprland";
+    XDG_SESSION_DESKTOP = "Hyprland";
     XDG_SESSION_TYPE = "wayland";
   };
 
@@ -113,7 +104,6 @@ in
     xdgOpenUsePortal = true;
     extraPortals = with pkgs; [
       xdg-desktop-portal-gtk
-      xdg-desktop-portal-wlr
     ];
   };
 
