@@ -1,4 +1,8 @@
 { config, lib, pkgs, ... }:
+let
+  timAgeKey = "/home/tim/.config/age/keys.txt";
+  hasTimAgeKey = builtins.pathExists timAgeKey;
+in
 
 {
   imports = lib.optional (builtins.pathExists ./hardware-configuration.nix)
@@ -16,9 +20,10 @@
     };
   };
 
-  # Decrypt agenix secrets using this machine's age identity key.
-  age.identityPaths = [ "/home/tim/.config/age/keys.txt" ];
-  age.secrets = {
+  # Bootstrap cleanly without secrets; once the age key exists, a rebuild
+  # enables the encrypted mail config automatically.
+  age.identityPaths = lib.mkIf hasTimAgeKey [ timAgeKey ];
+  age.secrets = lib.mkIf hasTimAgeKey {
     mbsyncrc = {
       file = ../../secrets/mbsyncrc.age;
       path = "/home/tim/.config/isync/mbsyncrc";
@@ -38,6 +43,7 @@
   time.timeZone = "Europe/London";
 
   programs.dwl.enable = true;
+  programs.dconf.enable = true;
   programs.steam.enable = true;
   programs.gamemode.enable = true;
   programs.xwayland.enable = true;

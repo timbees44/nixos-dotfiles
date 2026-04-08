@@ -22,6 +22,7 @@ in
   home.username = "tim";
   home.homeDirectory = "/home/tim";
   home.stateVersion = "24.05";
+  xdg.enable = true;
 
   programs.gpg.enable = true;
   services.gpg-agent = {
@@ -97,6 +98,10 @@ in
   home.file."pictures/walls/.keep" = {
     text = "";
   };
+
+  home.activation.ensureBootstrapDirs = lib.hm.dag.entryBefore [ "dconfSettings" ] ''
+    mkdir -p "$HOME/.config/dconf" "$HOME/.config/age" "$HOME/.config/isync" "$HOME/.config/msmtp"
+  '';
 
   home.activation.doomInstall = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     doomSrc=${lib.escapeShellArg doomemacs}

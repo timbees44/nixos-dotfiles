@@ -47,9 +47,6 @@
                     inherit doomemacs;
                   };
                 };
-                systemd.services."home-manager-tim".serviceConfig.Environment = [
-                  "XDG_RUNTIME_DIR=/run/user/1000"
-                ];
               }
             ]);
         };
