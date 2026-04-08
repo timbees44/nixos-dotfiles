@@ -13,11 +13,29 @@
 
 (setq user-mail-address (or (tim/mail-address-from-msmtp-config) user-mail-address))
 
+;; Platform helpers
+(defun tn/executable-or-first-existing (&rest candidates)
+  "Return the first executable or existing path from CANDIDATES."
+  (seq-some (lambda (candidate)
+              (cond
+               ((null candidate) nil)
+               ((file-executable-p candidate) candidate)
+               ((file-exists-p candidate) candidate)
+               (t (executable-find candidate))))
+            candidates))
+
+(defun tn/add-existing-directories-to-load-path (&rest directories)
+  "Add each existing directory in DIRECTORIES to `load-path'."
+  (dolist (dir directories)
+    (when (file-directory-p dir)
+      (add-to-list 'load-path dir))))
+
 ;; Appearance
 (setq doom-font (font-spec :family "JetBrainsMonoNL NF" :size 12))
 
 (setq doom-theme 'doom-gruvbox)
-(add-to-list 'default-frame-alist '(alpha . 90))
+(when (display-graphic-p)
+  (add-to-list 'default-frame-alist '(alpha-background . 90)))
 
 (setq display-line-numbers-type `relative)
 
@@ -168,8 +186,7 @@ This keeps screen-line wrapping in sync after window resizes."
 ;; macOS frame styling
 (when (featurep 'ns)
   (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-  (add-to-list 'default-frame-alist '(ns-appearance . dark))
-  (add-to-list 'default-frame-alist '(undecorated . t)))
+  (add-to-list 'default-frame-alist '(ns-appearance . dark)))
 (add-to-list 'default-frame-alist '(internal-border-width . 10))
 (menu-bar-mode -1)
 (tool-bar-mode -1)
@@ -183,38 +200,59 @@ This keeps screen-line wrapping in sync after window resizes."
   (setq pdf-view-midnight-colors '("#ABB2BF" . "#282C35")))
 
 ;; mu4e load path
-(when (featurep 'ns)
-  (setq mu4e-mu-binary "/opt/homebrew/bin/mu"
-        mu4e-maildir "~/.mail")
-  (dolist (dir '("/opt/homebrew/share/emacs/site-lisp/mu/mu4e"
-                 "/opt/homebrew/opt/mu/share/emacs/site-lisp/mu4e"
-                 "/usr/local/share/emacs/site-lisp/mu/mu4e"
-                 "/usr/local/opt/mu/share/emacs/site-lisp/mu4e"))
-    (when (file-directory-p dir)
-      (add-to-list 'load-path dir))))
+(setq mu4e-maildir "~/.mail")
+(when-let ((mu-binary
+            (tn/executable-or-first-existing
+             "mu"
+             "/opt/homebrew/bin/mu"
+             "/usr/local/bin/mu"
+             "/etc/profiles/per-user/tim/bin/mu"
+             "/run/current-system/sw/bin/mu")))
+  (setq mu4e-mu-binary mu-binary))
+(tn/add-existing-directories-to-load-path
+ "/opt/homebrew/share/emacs/site-lisp/mu/mu4e"
+ "/opt/homebrew/opt/mu/share/emacs/site-lisp/mu4e"
+ "/usr/local/share/emacs/site-lisp/mu/mu4e"
+ "/usr/local/opt/mu/share/emacs/site-lisp/mu4e"
+ "/etc/profiles/per-user/tim/share/emacs/site-lisp/mu4e"
+ "/run/current-system/sw/share/emacs/site-lisp/mu4e")
 
 ;; mu4e
 (after! mu4e
-  (let ((mail-address (tim/mail-address-from-msmtp-config)))
+  (let ((mail-address (tim/mail-address-from-msmtp-config))
+        (mbsync
+         (tn/executable-or-first-existing
+          "mbsync"
+          "/etc/profiles/per-user/tim/bin/mbsync"
+          "/run/current-system/sw/bin/mbsync"))
+        (msmtp
+         (tn/executable-or-first-existing
+          "msmtp"
+          "/etc/profiles/per-user/tim/bin/msmtp"
+          "/run/current-system/sw/bin/msmtp")))
     (setq mu4e-maildir "~/.mail"
           mu4e-user-mail-address-list (when mail-address (list mail-address))
-        mu4e-get-mail-command
-        "/etc/profiles/per-user/tim/bin/mbsync -c ~/.config/isync/mbsyncrc gmail"
-        mu4e-update-interval 300
-        sendmail-program
-        (or (executable-find "msmtp")
-            "/etc/profiles/per-user/tim/bin/msmtp")
-        message-send-mail-function #'message-send-mail-with-sendmail
-        message-sendmail-envelope-from 'header
-        message-sendmail-f-is-evil t
-        message-sendmail-extra-arguments
-        (list "--read-envelope-from"
-              "--read-recipients"
-              (concat "--file=" (expand-file-name "~/.config/msmtp/config")))
-        mu4e-drafts-folder "/gmail/[Gmail]/Drafts"
-        mu4e-sent-folder "/gmail/[Gmail]/Sent Mail"
-        mu4e-trash-folder "/gmail/[Gmail]/Trash"
-        mu4e-refile-folder "/gmail/[Gmail]/All Mail")))
+          mu4e-update-interval 300
+          mu4e-drafts-folder "/gmail/[Gmail]/Drafts"
+          mu4e-sent-folder "/gmail/[Gmail]/Sent Mail"
+          mu4e-trash-folder "/gmail/[Gmail]/Trash"
+          mu4e-refile-folder "/gmail/[Gmail]/All Mail")
+    (when mbsync
+      (setq mu4e-get-mail-command
+            (mapconcat #'identity
+                       (list mbsync
+                             "-c" (expand-file-name "~/.config/isync/mbsyncrc")
+                             "gmail")
+                       " ")))
+    (when msmtp
+      (setq sendmail-program msmtp
+            message-send-mail-function #'message-send-mail-with-sendmail
+            message-sendmail-envelope-from 'header
+            message-sendmail-f-is-evil t
+            message-sendmail-extra-arguments
+            (list "--read-envelope-from"
+                  "--read-recipients"
+                  (concat "--file=" (expand-file-name "~/.config/msmtp/config")))))))
 
 ;; Elfeed
 (setq elfeed-db-directory "~/.elfeed"

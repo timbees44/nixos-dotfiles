@@ -9,6 +9,6 @@
 ** [[https://www.securityweek.com/feed/][SecurityWeek]]
 ** [[https://github.blog/security/feed/][GitHub Security Blog]]
 ** [[https://www.theregister.com/security/headlines.atom][The Register Security]]
-** [[https://snyk.io/blog/feed/][Snyk Blog]]
+** [[https://snyk.io/blog/feed/][Sny Blog]]
 ** [[https://www.cisa.gov/cybersecurity-advisories/all.xml][CISA Cybersecurity Advisories]]
 ** [[https://www.cshub.com/rss/categories/attacks][CSHub Attamcks]]
