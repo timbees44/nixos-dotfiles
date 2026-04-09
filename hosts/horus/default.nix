@@ -5,8 +5,8 @@ let
 in
 
 {
-  imports = lib.optional (builtins.pathExists /etc/nixos/hardware-configuration.nix)
-    /etc/nixos/hardware-configuration.nix;
+  imports = lib.optional (builtins.pathExists ./hardware-configuration.nix)
+    ./hardware-configuration.nix;
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
