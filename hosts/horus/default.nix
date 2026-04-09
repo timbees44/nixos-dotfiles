@@ -5,8 +5,8 @@ let
 in
 
 {
-  imports = lib.optional (builtins.pathExists ./hardware-configuration.nix)
-    ./hardware-configuration.nix;
+  imports = lib.optional (builtins.pathExists /etc/nixos/hardware-configuration.nix)
+    /etc/nixos/hardware-configuration.nix;
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -79,7 +79,7 @@ in
     modesetting.enable = true;
     nvidiaSettings = true;
     powerManagement.enable = false;
-    open = false;
+    open = true;
     package = config.boot.kernelPackages.nvidiaPackages.production;
   };
 
@@ -119,6 +119,7 @@ in
     cmake
     gnumake
     gcc
+    pciutils
     bluez
     bluez-tools
     pkg-config
