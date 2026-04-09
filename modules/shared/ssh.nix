@@ -2,6 +2,7 @@
 {
   services.openssh = {
     enable = lib.mkDefault true;
+    openFirewall = lib.mkDefault true;
     settings = {
       PermitRootLogin = "no";
       PasswordAuthentication = lib.mkDefault true;

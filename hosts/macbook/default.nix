@@ -98,6 +98,7 @@
       "mu"
     ];
     casks = [
+      "anki"
       "codex"
       "karabiner-elements"
       "mos"
