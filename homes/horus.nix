@@ -47,6 +47,7 @@ in
     gcc
     gnumake
     hypridle
+    hyprpaper
     isync
     jq
     msmtp
@@ -90,6 +91,10 @@ in
 
   home.file."pictures/walls/.keep" = {
     text = "";
+  };
+
+  home.file."pictures/walls/prometheus.png" = {
+    source = create_symlink "${dotfiles}/walls/prometheus.png";
   };
 
   home.activation.ensureBootstrapDirs = lib.hm.dag.entryBefore [ "dconfSettings" ] ''

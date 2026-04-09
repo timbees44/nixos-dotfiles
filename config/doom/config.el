@@ -186,7 +186,8 @@ This keeps screen-line wrapping in sync after window resizes."
 ;; macOS frame styling
 (when (featurep 'ns)
   (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-  (add-to-list 'default-frame-alist '(ns-appearance . dark)))
+  (add-to-list 'default-frame-alist '(ns-appearance . dark))
+  (add-to-list 'default-frame-alist '(undecorated . t)))
 (add-to-list 'default-frame-alist '(internal-border-width . 10))
 (menu-bar-mode -1)
 (tool-bar-mode -1)
