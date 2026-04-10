@@ -95,6 +95,7 @@
     brews = [
       "d12frosted/emacs-plus/emacs-plus@30"
       "felixkratz/formulae/sketchybar"
+      "isync"
       "mu"
     ];
     casks = [

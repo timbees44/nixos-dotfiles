@@ -12,3 +12,4 @@
 ** [[https://snyk.io/blog/feed/][Sny Blog]]
 ** [[https://www.cisa.gov/cybersecurity-advisories/all.xml][CISA Cybersecurity Advisories]]
 ** [[https://www.cshub.com/rss/categories/attacks][CSHub Attamcks]]
+** [[https://joshblais.com/index.xml][Joshua Blais]]
