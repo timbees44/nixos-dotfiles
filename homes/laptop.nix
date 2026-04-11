@@ -87,6 +87,14 @@ in
     source = create_symlink "${dotfiles}/bash/.bash_profile";
   };
 
+  home.file.".doom.d" = {
+    source = create_symlink "${dotfiles}/doom";
+  };
+
+  home.sessionVariables = {
+    DOOMDIR = "${config.home.homeDirectory}/.config/doom";
+  };
+
   xdg.configFile = builtins.mapAttrs
     (name: subpath: {
       source = create_symlink "${dotfiles}/${subpath}";
@@ -115,9 +123,10 @@ in
     done
   '';
 
-  home.activation.doomSync = lib.hm.dag.entryAfter [ "doomInstall" ] ''
+  home.activation.doomSync = lib.hm.dag.entryAfter [ "doomInstall" "linkGeneration" ] ''
     doomBin="${doomDir}/bin/doom"
     if [ -x "$doomBin" ]; then
+      export DOOMDIR="${config.home.homeDirectory}/.config/doom"
       export PATH=${lib.makeBinPath [ pkgs.emacs pkgs.git pkgs.gnutar pkgs.gzip pkgs.coreutils ]}:$PATH
       "$doomBin" sync || true
     fi
