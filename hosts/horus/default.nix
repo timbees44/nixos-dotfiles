@@ -1,7 +1,6 @@
 { config, lib, pkgs, ... }:
 let
   timAgeKey = "/home/tim/.config/age/keys.txt";
-  hasTimAgeKey = builtins.pathExists timAgeKey;
 in
 
 {
@@ -21,10 +20,8 @@ in
   };
   services.xserver.videoDrivers = [ "nvidia" ];
 
-  # Bootstrap cleanly without secrets; once the age key exists, a rebuild
-  # enables the encrypted mail config automatically.
-  age.identityPaths = lib.mkIf hasTimAgeKey [ timAgeKey ];
-  age.secrets = lib.mkIf hasTimAgeKey {
+  age.identityPaths = [ timAgeKey ];
+  age.secrets = {
     mbsyncrc = {
       file = ../../secrets/mbsyncrc.age;
       path = "/home/tim/.config/isync/mbsyncrc";
