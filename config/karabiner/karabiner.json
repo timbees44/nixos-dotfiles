@@ -13,37 +13,61 @@
       "complex_modifications": {
         "rules": [
           {
-            "description": "Swap right_command and right_option (leave left_option unchanged)",
+            "description": "Swap left_command and left_option for Corne only",
             "manipulators": [
               {
                 "type": "basic",
                 "from": {
-                  "key_code": "right_command",
+                  "key_code": "left_command",
                   "modifiers": {
                     "optional": [
                       "any"
                     ]
                   }
                 },
+                "conditions": [
+                  {
+                    "type": "device_if",
+                    "identifiers": [
+                      {
+                        "vendor_id": 7504,
+                        "product_id": 24926,
+                        "is_keyboard": true
+                      }
+                    ]
+                  }
+                ],
                 "to": [
                   {
-                    "key_code": "right_option"
+                    "key_code": "left_option"
                   }
                 ]
               },
               {
                 "type": "basic",
                 "from": {
-                  "key_code": "right_option",
+                  "key_code": "left_option",
                   "modifiers": {
                     "optional": [
                       "any"
                     ]
                   }
                 },
+                "conditions": [
+                  {
+                    "type": "device_if",
+                    "identifiers": [
+                      {
+                        "vendor_id": 7504,
+                        "product_id": 24926,
+                        "is_keyboard": true
+                      }
+                    ]
+                  }
+                ],
                 "to": [
                   {
-                    "key_code": "right_command"
+                    "key_code": "left_command"
                   }
                 ]
               }
