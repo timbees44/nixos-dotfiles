@@ -119,6 +119,12 @@ in
     source = create_symlink "${dotfiles}/doom";
   };
 
+  # Doom's mu4e module still probes ~/.config/isyncrc as an mbsync fallback.
+  # Keep a compatibility link to the real XDG config file.
+  home.file.".config/isyncrc" = {
+    source = create_symlink "${config.home.homeDirectory}/.config/isync/mbsyncrc";
+  };
+
   # Keep Doom CLI and Emacs aligned on the same config location.
   home.sessionVariables = {
     DOOMDIR = "${config.home.homeDirectory}/.config/doom";
