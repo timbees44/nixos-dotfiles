@@ -125,9 +125,13 @@ in
 
   home.activation.doomSync = lib.hm.dag.entryAfter [ "doomInstall" "linkGeneration" ] ''
     doomBin="${doomDir}/bin/doom"
+    straightFile="${doomDir}/.local/straight/repos/straight.el/straight.el"
     if [ -x "$doomBin" ]; then
       export DOOMDIR="${config.home.homeDirectory}/.config/doom"
       export PATH=${lib.makeBinPath [ pkgs.emacs pkgs.git pkgs.gnutar pkgs.gzip pkgs.coreutils ]}:$PATH
+      if [ ! -f "$straightFile" ]; then
+        "$doomBin" install --force || true
+      fi
       "$doomBin" sync || true
     fi
   '';
