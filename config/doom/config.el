@@ -31,7 +31,7 @@
       (add-to-list 'load-path dir))))
 
 ;; Appearance
-(setq doom-font (font-spec :family "JetBrainsMonoNL NF" :size 12))
+(setq doom-font (font-spec :family "JetBrainsMonoNL NF" :size 14))
 
 (setq doom-theme 'doom-gruvbox)
 (when (display-graphic-p)
