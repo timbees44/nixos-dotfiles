@@ -28,7 +28,7 @@ in
     pinentry.package = pkgs.pinentry-curses;
   };
 
-  home.packages = (with pkgs; [
+  home.packages = with pkgs; [
     bat
     btop
     codex
@@ -58,7 +58,11 @@ in
       ];
       text = ''exec "${pkgs.nix-search-tv.src}/nixpkgs.sh" "$@"'';
     })
-  ]);
+  ];
+
+  home.file.".bashrc" = {
+    source = createSymlink "${dotfiles}/bash/.bashrc";
+  };
 
   home.file.".zshrc" = {
     source = createSymlink "${dotfiles}/zsh/.zshrc";
