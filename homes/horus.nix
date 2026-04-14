@@ -34,6 +34,7 @@ in
   home.packages = (with pkgs; [
     bat
     bluez
+    blueman
     bluetui
     brave
     btop
