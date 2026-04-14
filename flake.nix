@@ -3,6 +3,10 @@
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
+    nixos-wsl = {
+      url = "github:nix-community/NixOS-WSL/main";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     home-manager = {
       url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -21,7 +25,7 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, agenix, darwin, doomemacs, ... }:
+  outputs = inputs@{ self, nixpkgs, nixos-wsl, home-manager, agenix, darwin, doomemacs, ... }:
     let
       inherit (nixpkgs.lib) nixosSystem;
       inherit (darwin.lib) darwinSystem;
@@ -89,6 +93,14 @@
             ./hosts/horus/default.nix
           ];
           hmConfig = ./homes/horus.nix;
+        };
+
+        wsl = mkHost {
+          modules = [
+            nixos-wsl.nixosModules.default
+            ./hosts/wsl/default.nix
+          ];
+          hmConfig = ./homes/wsl.nix;
         };
 
         server = mkHost {
