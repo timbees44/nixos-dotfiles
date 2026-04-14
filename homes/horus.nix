@@ -39,6 +39,7 @@ in
     cmake
     codex
     deluge
+    element-desktop
     emacs
     eza
     fd
