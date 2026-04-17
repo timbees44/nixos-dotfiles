@@ -105,6 +105,7 @@
       "mos"
       "nikitabobko/tap/aerospace"
       "skim"
+      "tailscale-app"
       "vlc"
     ];
     masApps = { };

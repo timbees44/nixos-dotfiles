@@ -44,19 +44,51 @@
 (defvar tn/locate-search-root (expand-file-name "~")
   "Root directory searched by the custom `locate' command.")
 
+(defun tn/rg-binary ()
+  "Return the preferred ripgrep executable path."
+  (tn/executable-or-first-existing
+   "rg"
+   "/etc/profiles/per-user/tim/bin/rg"
+   "/run/current-system/sw/bin/rg"
+   (expand-file-name "~/.nix-profile/bin/rg")
+   "/opt/homebrew/bin/rg"
+   "/usr/local/bin/rg"))
+
+(defun tn/fd-binary ()
+  "Return the preferred fd executable path."
+  (tn/executable-or-first-existing
+   "fd"
+   "/etc/profiles/per-user/tim/bin/fd"
+   "/run/current-system/sw/bin/fd"
+   (expand-file-name "~/.nix-profile/bin/fd")))
+
+(defun tn/find-binary ()
+  "Return the preferred find executable path."
+  (tn/executable-or-first-existing
+   "find"
+   "/run/current-system/sw/bin/find"
+   "/usr/bin/find"))
+
+(defun tn/mdfind-binary ()
+  "Return the preferred mdfind executable path."
+  (when (eq system-type 'darwin)
+    (tn/executable-or-first-existing
+     "mdfind"
+     "/usr/bin/mdfind")))
+
 (defun tn/locate-backend-command ()
   "Return the preferred search backend for file lookup commands."
   (cond
-   ((executable-find "fd"))
-   ((and (eq system-type 'darwin) (executable-find "mdfind")))
-   ((executable-find "find"))
+   ((tn/fd-binary))
+   ((tn/mdfind-binary))
+   ((tn/find-binary))
    (t nil)))
 
 (defun tn/locate-make-command-line (search-string)
   "Build a cross-platform command line for `locate' using fd, mdfind, or find."
   (cond
-   ((executable-find "fd")
-    (list (executable-find "fd")
+   ((tn/fd-binary)
+    (list (tn/fd-binary)
           "--absolute-path"
           "--color" "never"
           "--type" "f"
@@ -64,12 +96,12 @@
           "--follow"
           search-string
           tn/locate-search-root))
-   ((and (eq system-type 'darwin) (executable-find "mdfind"))
-    (list (executable-find "mdfind")
+   ((tn/mdfind-binary)
+    (list (tn/mdfind-binary)
           "-onlyin" tn/locate-search-root
           "-name" search-string))
-   ((executable-find "find")
-    (list (executable-find "find")
+   ((tn/find-binary)
+    (list (tn/find-binary)
           tn/locate-search-root
           "(" "-type" "f" "-o" "-type" "l" ")"
           "-iname" (format "*%s*" search-string)))
@@ -82,7 +114,9 @@
   (setq locate-make-command-line #'tn/locate-make-command-line))
 
 (after! consult
-  (when-let ((fd (executable-find "fd")))
+  (when-let ((rg (tn/rg-binary)))
+    (setq doom-ripgrep-executable rg))
+  (when-let ((fd (tn/fd-binary)))
     (setq consult-fd-args
           (mapconcat #'identity
                      (list fd
@@ -97,11 +131,11 @@
   ;; `locate --ignore-case`, which is not supported there.
   (setq consult-locate-args
         (cond
-         ((executable-find "fd")
+         ((tn/fd-binary)
           consult-fd-args)
-         ((and (eq system-type 'darwin) (executable-find "mdfind"))
+         ((tn/mdfind-binary)
           (mapconcat #'identity
-                     (list (executable-find "mdfind")
+                     (list (tn/mdfind-binary)
                            "-onlyin" tn/locate-search-root
                            "-name")
                      " "))

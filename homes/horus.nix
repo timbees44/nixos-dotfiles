@@ -39,6 +39,7 @@ in
     btop
     cmake
     codex
+    curl
     deluge
     element-desktop
     emacs
