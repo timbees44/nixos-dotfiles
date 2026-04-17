@@ -1,7 +1,7 @@
 { pkgs, ... }:
 {
   # Hostname shown in macOS sharing/network panes.
-  networking.hostName = "laptop";
+  networking.hostName = "fulgrim";
 
   # Keep user path explicit for Darwin module defaults.
   users.users.tim.home = "/Users/tim";
