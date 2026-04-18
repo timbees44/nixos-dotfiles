@@ -1,11 +1,9 @@
-{ config, pkgs, lib, doomemacs, ... }:
+{ config, pkgs, lib, ... }:
 let
   dotfiles = "${config.home.homeDirectory}/nixos-dotfiles/config";
   create_symlink = path: config.lib.file.mkOutOfStoreSymlink path;
-  doomDir = "${config.home.homeDirectory}/.emacs.d";
 
   configs = {
-    doom = "doom";
     hypr = "hypr";
     foot = "foot";
     nvim = "nvim";
@@ -83,14 +81,6 @@ in
     source = create_symlink "${dotfiles}/bash/.bash_profile";
   };
 
-  home.file.".doom.d" = {
-    source = create_symlink "${dotfiles}/doom";
-  };
-
-  home.sessionVariables = {
-    DOOMDIR = "${config.home.homeDirectory}/.config/doom";
-  };
-
   xdg.configFile = builtins.mapAttrs
     (_name: subpath: {
       source = create_symlink "${dotfiles}/${subpath}";
@@ -110,29 +100,22 @@ in
     mkdir -p "$HOME/.config/dconf" "$HOME/.config/age" "$HOME/.config/isync" "$HOME/.config/msmtp"
   '';
 
-  home.activation.doomInstall = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    doomSrc=${lib.escapeShellArg doomemacs}
-    doomDest=${lib.escapeShellArg doomDir}
-    mkdir -p "$doomDest"
-    ${pkgs.rsync}/bin/rsync -a --delete \
-      --chmod=Du+rwx,Fu+rw \
-      --exclude='.local/' \
-      "$doomSrc"/ "$doomDest"/
-    for d in .local .local/etc .local/cache .local/state; do
-      install -d -m 700 "$doomDest/$d"
-    done
-  '';
-
-  home.activation.doomSync = lib.hm.dag.entryAfter [ "doomInstall" "linkGeneration" ] ''
-    doomBin="${doomDir}/bin/doom"
-    straightFile="${doomDir}/.local/straight/repos/straight.el/straight.el"
-    if [ -x "$doomBin" ]; then
-      export DOOMDIR="${config.home.homeDirectory}/.config/doom"
-      export PATH=${lib.makeBinPath [ pkgs.emacs pkgs.git pkgs.gnutar pkgs.gzip pkgs.coreutils ]}:$PATH
-      if [ ! -f "$straightFile" ]; then
-        "$doomBin" install --force || true
+  # Keep Horus on bare Emacs by moving any existing Doom trees out of the way.
+  home.activation.disableDoom = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    if [ -x "$HOME/.emacs.d/bin/doom" ]; then
+      backup="$HOME/.emacs.d.doom-backup"
+      if [ -e "$backup" ]; then
+        backup="$backup-$(date +%s)"
       fi
-      "$doomBin" sync || true
+      mv "$HOME/.emacs.d" "$backup"
+    fi
+
+    if [ -e "$HOME/.config/doom" ] || [ -L "$HOME/.config/doom" ]; then
+      backup="$HOME/.config/doom.backup"
+      if [ -e "$backup" ]; then
+        backup="$backup-$(date +%s)"
+      fi
+      mv "$HOME/.config/doom" "$backup"
     fi
   '';
 }
