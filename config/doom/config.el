@@ -76,6 +76,25 @@
      "mdfind"
      "/usr/bin/mdfind")))
 
+(defun tn/preferred-shell ()
+  "Return the preferred interactive shell executable."
+  (tn/executable-or-first-existing
+   (getenv "SHELL")
+   "/run/current-system/sw/bin/bash"
+   "/etc/profiles/per-user/tim/bin/bash"
+   "/opt/homebrew/bin/bash"
+   "/bin/bash"
+   "/bin/zsh"
+   "/usr/bin/zsh"))
+
+(defun tn/preferred-shell-args (shell)
+  "Return interactive startup arguments for SHELL."
+  (cond
+   ((null shell) nil)
+   ((string-match-p "bash\\'" shell) '("-i"))
+   ((string-match-p "zsh\\'" shell) '("-i"))
+   (t nil)))
+
 (defun tn/locate-backend-command ()
   "Return the preferred search backend for file lookup commands."
   (cond
@@ -140,6 +159,14 @@
                            "-name")
                      " "))
          (t consult-locate-args))))
+
+(when-let ((shell (tn/preferred-shell)))
+  (setq shell-file-name shell
+        explicit-shell-file-name shell)
+  (setenv "SHELL" shell)
+  (after! vterm
+    (setq vterm-shell shell
+          vterm-shell-args (tn/preferred-shell-args shell))))
 
 ;; Org
 (setq org-directory "~/Documents/org/")
