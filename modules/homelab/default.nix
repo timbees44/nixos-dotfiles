@@ -13,6 +13,7 @@ ${lines}
     }
   '';
   calibreConfigDir = "/var/lib/calibre-web-automated";
+  kavitaConfigDir = "/var/lib/kavita";
   ensureDir = path: owner: group: mode: "d '${path}' ${mode} ${owner} ${group} - -";
   mediaSubdirRule = name: ensureDir "${cfg.mediaDir}/${name}" cfg.user "media" "0755";
   simpleProxy = port: { extraConfig = proxyBlock port ""; };
@@ -21,6 +22,7 @@ ${lines}
     "${fqdn "jellyfin"}" = simpleProxy 8096;
     "${fqdn "audiobookshelf"}" = simpleProxy 13378;
     "${fqdn "calibre"}" = simpleProxy 8083;
+    "${fqdn "kavita"}" = simpleProxy 5001;
     "${fqdn "frigate"}" = simpleProxy 5000;
     "${fqdn "homeassistant"}" = {
       extraConfig = proxyWithBlock 8123 ''
@@ -310,6 +312,7 @@ in {
       (mediaSubdirRule "music")
       (mediaSubdirRule "books")
       (mediaSubdirRule "books-ingest")
+      (mediaSubdirRule "manga")
       (mediaSubdirRule "audiobooks")
       (mediaSubdirRule "photos")
       (ensureDir "${cfg.mediaDir}/security" cfg.user "media" "0755")
@@ -317,6 +320,8 @@ in {
       (ensureDir "${cfg.mediaDir}/security/frigate/config" "root" "root" "0755")
       (ensureDir calibreConfigDir cfg.user "media" "0755")
       (ensureDir "${calibreConfigDir}/config" cfg.user "media" "0755")
+      (ensureDir kavitaConfigDir cfg.user "media" "0755")
+      (ensureDir "${kavitaConfigDir}/config" cfg.user "media" "0755")
       (ensureDir "/var/lib/immich" "immich" "immich" "0750")
       (ensureDir "/var/lib/immich/library" "immich" "immich" "0750")
       (ensureDir "/var/lib/immich/upload" "immich" "immich" "0750")
@@ -344,6 +349,19 @@ in {
         TZ = cfg.timezone;
         CALIBRE_LIBRARY_PATH = "/calibre-library";
         METADATA_UPDATE = "true";
+      };
+    };
+
+    virtualisation.oci-containers.containers.kavita = {
+      image = "jvmilazz0/kavita:latest";
+      autoStart = true;
+      ports = [ "${cfg.serviceAddress}:5001:5000" ];
+      volumes = [
+        "${cfg.mediaDir}/manga:/manga"
+        "${kavitaConfigDir}/config:/kavita/config"
+      ];
+      environment = {
+        TZ = cfg.timezone;
       };
     };
 

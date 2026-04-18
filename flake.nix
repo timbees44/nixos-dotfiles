@@ -102,7 +102,7 @@
           hmConfig = ./homes/horus.nix;
         };
 
-        server = mkHost {
+        eisenstein = mkHost {
           modules = [
             ./modules/homelab
             ./hosts/server/default.nix
@@ -111,8 +111,8 @@
       };
 
       darwinConfigurations = {
-        # Local MacBook target: `darwin-rebuild switch --flake .#macbook`
-        macbook = mkDarwinHost {
+        # Local macOS target: `darwin-rebuild switch --flake .#fulgrim`
+        fulgrim = mkDarwinHost {
           modules = [
             ./hosts/macbook/default.nix
           ];
@@ -121,7 +121,7 @@
       };
 
       homeConfigurations = {
-        wsl-ubuntu = mkHome {
+        legion = mkHome {
           hmConfig = ./homes/wsl-ubuntu.nix;
         };
       };

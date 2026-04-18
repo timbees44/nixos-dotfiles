@@ -97,7 +97,7 @@ in
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking = {
-    hostName = "server";
+    hostName = "eisenstein";
     useNetworkd = true;
     networkmanager.enable = false;
     interfaces.${lanInterface} = {
@@ -117,6 +117,7 @@ in
         "syncthing.lan"
         "audiobookshelf.lan"
         "calibre.lan"
+        "kavita.lan"
         "frigate.lan"
         "homeassistant.lan"
         "immich.lan"
@@ -131,6 +132,7 @@ in
         8384 # syncthing UI
         13378 # audiobookshelf
         8083 # calibre
+        5001 # kavita
         2283 # immich
         5000 # frigate
         8123 # ha
@@ -153,6 +155,7 @@ in
         "/syncthing.lan/192.168.1.67"
         "/audiobookshelf.lan/192.168.1.67"
         "/calibre.lan/192.168.1.67"
+        "/kavita.lan/192.168.1.67"
       ];
       listen-address = [ "192.168.1.67" "127.0.0.1" ];
     };
