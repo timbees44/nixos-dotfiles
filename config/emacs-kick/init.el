@@ -45,8 +45,6 @@
   :group 'appearance)
 
 
-
-
 ;;; EMACS
 (use-package emacs
   :ensure nil
@@ -84,10 +82,26 @@
   ;; By default emacs gives you access to a lot of *special* buffers, while navigating with [b and ]b,
   ;; this might be confusing for newcomers. This settings make sure ]b and [b will always load a
   ;; file buffer. To see all buffers use <leader> SPC, <leader> b l, or <leader> b i.
+  (defun ek-ai-code-buffer-p (buffer-or-name)
+    "Return non-nil when BUFFER-OR-NAME is an AI Code session or helper buffer."
+    (let ((name (if (stringp buffer-or-name)
+                    buffer-or-name
+                  (buffer-name buffer-or-name))))
+      (or (string-match-p "\\`\\*.*\\[.*\\].*\\*\\'" name)
+          (string-match-p "\\`\\*[Aa][Ii] Code.*\\*\\'" name)
+          (string-match-p "\\`\\*ai-code-.*\\*\\'" name)
+          (string-match-p "\\`ai-code-mcp-http-server <.*>\\'" name))))
+
   (defun skip-these-buffers (_window buffer _bury-or-kill)
     "Function for `switch-to-prev-buffer-skip'."
-    (string-match "\\*[^*]+\\*" (buffer-name buffer)))
+    (or (string-match "\\*[^*]+\\*" (buffer-name buffer))
+        (ek-ai-code-buffer-p buffer)))
   (setq switch-to-prev-buffer-skip 'skip-these-buffers)
+  (dolist (regexp '("\\`\\*.*\\[.*\\].*\\*\\'"
+                    "\\`\\*[Aa][Ii] Code.*\\*\\'"
+                    "\\`\\*ai-code-.*\\*\\'"
+                    "\\`ai-code-mcp-http-server <.*>\\'"))
+    (add-to-list 'consult-buffer-filter regexp))
 
 
   ;; Configure font settings based on the operating system.
@@ -307,6 +321,15 @@
   :defer t        ;; Defer loading Which-Key until after init.
   :hook
   (after-init . which-key-mode)) ;; Enable which-key mode after initialization.
+
+
+;;; IBUFFER
+(use-package ibuffer
+  :ensure nil
+  :defer t
+  :init
+  (require 'ibuf-ext)
+  (add-to-list 'ibuffer-never-show-predicates #'ek-ai-code-buffer-p))
 
 
 ;;; ==================== EXTERNAL PACKAGES ====================
