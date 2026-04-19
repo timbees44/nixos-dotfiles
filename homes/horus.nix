@@ -40,6 +40,7 @@ in
     codex
     curl
     deluge
+    discord
     element-desktop
     emacs
     eza
