@@ -4,6 +4,7 @@ let
   create_symlink = path: config.lib.file.mkOutOfStoreSymlink path;
 
   configs = {
+    emacs = "emacs-kick";
     hypr = "hypr";
     foot = "foot";
     nvim = "nvim";
@@ -81,6 +82,12 @@ in
     source = create_symlink "${dotfiles}/bash/.bash_profile";
   };
 
+  # Emacs still prefers ~/.emacs.d/init.el when ~/.emacs.d exists.
+  # Keep config source in ~/.config/emacs (xdg) and bridge with a shim.
+  home.file.".emacs.d/init.el" = {
+    source = create_symlink "${dotfiles}/emacs-kick/init.el";
+  };
+
   xdg.configFile = builtins.mapAttrs
     (_name: subpath: {
       source = create_symlink "${dotfiles}/${subpath}";
@@ -100,22 +107,4 @@ in
     mkdir -p "$HOME/.config/dconf" "$HOME/.config/age" "$HOME/.config/isync" "$HOME/.config/msmtp"
   '';
 
-  # Keep Horus on bare Emacs by moving any existing Doom trees out of the way.
-  home.activation.disableDoom = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-    if [ -x "$HOME/.emacs.d/bin/doom" ]; then
-      backup="$HOME/.emacs.d.doom-backup"
-      if [ -e "$backup" ]; then
-        backup="$backup-$(date +%s)"
-      fi
-      mv "$HOME/.emacs.d" "$backup"
-    fi
-
-    if [ -e "$HOME/.config/doom" ] || [ -L "$HOME/.config/doom" ]; then
-      backup="$HOME/.config/doom.backup"
-      if [ -e "$backup" ]; then
-        backup="$backup-$(date +%s)"
-      fi
-      mv "$HOME/.config/doom" "$backup"
-    fi
-  '';
 }
