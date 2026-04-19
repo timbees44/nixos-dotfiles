@@ -312,6 +312,18 @@
 ;; Note: I have left some commented-out code below that may facilitate your
 ;; Emacs journey later on. These configurations can be useful for displaying
 ;; other types of buffers in side windows, allowing for a more organized workspace.
+(defun ek/split-window-below-and-focus ()
+  "Split the current window below and move focus to the new window."
+  (interactive)
+  (split-window-below)
+  (other-window 1))
+
+(defun ek/split-window-right-and-focus ()
+  "Split the current window right and move focus to the new window."
+  (interactive)
+  (split-window-right)
+  (other-window 1))
+
 (use-package window
   :ensure nil       ;; This is built-in, no need to fetch it.
   :custom
@@ -872,6 +884,66 @@
   :defer t)
 
 
+;;; VTERM
+;; Use a real terminal emulator for interactive CLI tools that expect proper
+;; terminal behavior, including AI coding sessions.
+(use-package vterm
+  :ensure t
+  :straight t
+  :commands (vterm vterm-mode)
+  :init
+  (defvar ek/vterm-popup-buffer-name "*vterm-popup*"
+    "Buffer name used for the popup terminal.")
+  (defvar ek/vterm-full-buffer-name "*vterm*"
+    "Buffer name used for the full-size terminal.")
+
+  (defun ek/vterm--get-or-create-buffer (buffer-name)
+    "Return a live vterm buffer named BUFFER-NAME, creating it if needed."
+    (or (when-let ((buffer (get-buffer buffer-name)))
+          (when (buffer-live-p buffer)
+            buffer))
+        (save-window-excursion
+          (vterm buffer-name)
+          (current-buffer))))
+
+  (defun ek/vterm-toggle-popup ()
+    "Toggle a popup vterm in a bottom side window."
+    (interactive)
+    (let* ((buffer (ek/vterm--get-or-create-buffer ek/vterm-popup-buffer-name))
+           (window (get-buffer-window buffer t)))
+      (if (window-live-p window)
+          (delete-window window)
+        (let ((display-buffer-overriding-action
+               '((display-buffer-in-side-window)
+                 (side . bottom)
+                 (slot . -1)
+                 (window-height . 0.3))))
+          (pop-to-buffer buffer)
+          (select-window (get-buffer-window buffer t))))))
+
+  (defun ek/vterm-open-full ()
+    "Open a dedicated vterm buffer and make it fill the current frame."
+    (interactive)
+    (let ((buffer (ek/vterm--get-or-create-buffer ek/vterm-full-buffer-name)))
+      (switch-to-buffer buffer)
+      (delete-other-windows)))
+  :defer t)
+
+
+;;; AI CODE
+;; Keep AI integration light: use the Codex backend and a plain vterm backend
+;; without restoring the older Doom-specific resize and reflow glue.
+(use-package ai-code
+  :ensure t
+  :straight t
+  :defer t
+  :config
+  (setq ai-code-backends-infra-terminal-backend 'vterm)
+  (ai-code-set-backend 'codex)
+  (setq ai-code-auto-test-type 'ask-me)
+  (ai-code-prompt-filepath-completion-mode 1))
+
+
 ;;; XCLIP
 ;; `xclip' is an Emacs package that integrates the X Window System clipboard
 ;; with Emacs. It allows seamless copying and pasting between Emacs and other
@@ -995,6 +1067,14 @@
   (evil-define-key 'normal 'global (kbd "<leader> g D") 'diff-hl-show-hunk) ;; Show diff for a hunk
   (evil-define-key 'normal 'global (kbd "<leader> g b") 'vc-annotate)       ;; Annotate buffer with version control info
 
+  ;; AI coding
+  (evil-define-key 'normal 'global (kbd "<leader> a a") 'ai-code-menu)
+  (evil-define-key 'normal 'global (kbd "<leader> a s") 'ai-code-cli-start)
+  (evil-define-key 'normal 'global (kbd "<leader> a z") 'ai-code-cli-switch-to-buffer-or-hide)
+  (evil-define-key 'normal 'global (kbd "<leader> a q") 'ai-code-ask-question)
+  (evil-define-key 'normal 'global (kbd "<leader> a c") 'ai-code-code-change)
+  (evil-define-key 'normal 'global (kbd "<leader> a p") 'ai-code-open-prompt-file)
+
   ;; Buffer management keybindings
   (evil-define-key 'normal 'global (kbd "] b") 'switch-to-next-buffer) ;; Switch to next buffer
   (evil-define-key 'normal 'global (kbd "[ b") 'switch-to-prev-buffer) ;; Switch to previous buffer
@@ -1030,6 +1110,23 @@
   (evil-define-key 'normal 'global (kbd "<leader> h f") 'describe-function) ;; Describe function
   (evil-define-key 'normal 'global (kbd "<leader> h v") 'describe-variable) ;; Describe variable
   (evil-define-key 'normal 'global (kbd "<leader> h k") 'describe-key) ;; Describe key
+
+  ;; Window management
+  (evil-define-key 'normal 'global (kbd "<leader> w w") 'other-window)
+  (evil-define-key 'normal 'global (kbd "<leader> w h") 'windmove-left)
+  (evil-define-key 'normal 'global (kbd "<leader> w j") 'windmove-down)
+  (evil-define-key 'normal 'global (kbd "<leader> w k") 'windmove-up)
+  (evil-define-key 'normal 'global (kbd "<leader> w l") 'windmove-right)
+  (evil-define-key 'normal 'global (kbd "<leader> w s") 'ek/split-window-below-and-focus)
+  (evil-define-key 'normal 'global (kbd "<leader> w v") 'ek/split-window-right-and-focus)
+  (evil-define-key 'normal 'global (kbd "<leader> w d") 'delete-window)
+  (evil-define-key 'normal 'global (kbd "<leader> w o") 'delete-other-windows)
+  (evil-define-key 'normal 'global (kbd "<leader> w u") 'winner-undo)
+  (evil-define-key 'normal 'global (kbd "<leader> w r") 'winner-redo)
+
+  ;; Terminal keybindings
+  (evil-define-key 'normal 'global (kbd "<leader> t t") 'ek/vterm-toggle-popup)
+  (evil-define-key 'normal 'global (kbd "<leader> t T") 'ek/vterm-open-full)
 
   ;; Tab navigation
   (evil-define-key 'normal 'global (kbd "] t") 'tab-next) ;; Go to next tab
@@ -1290,29 +1387,19 @@
   (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup)) ;; Setup icons in the marginalia mode for enhanced completion display.
 
 
-;;; CATPPUCCIN THEME
-;; The `catppuccin-theme' package provides a visually pleasing color theme
-;; for Emacs that is inspired by the popular Catppuccin color palette.
-;; This theme aims to create a comfortable and aesthetic coding environment
-;; with soft colors that are easy on the eyes.
+;;; THEMES
+;; Keep both Gruvbox and Catppuccin installed so switching themes stays easy,
+;; while defaulting to Gruvbox for the current look and feel.
 (use-package catppuccin-theme
   :ensure t
   :straight t
+  :defer t)
+
+(use-package gruvbox-theme
+  :ensure t
+  :straight t
   :config
-  (custom-set-faces
-   ;; Set the color for changes in the diff highlighting to blue.
-   `(diff-hl-change ((t (:background unspecified :foreground ,(catppuccin-get-color 'blue))))))
-
-  (custom-set-faces
-   ;; Set the color for deletions in the diff highlighting to red.
-   `(diff-hl-delete ((t (:background unspecified :foreground ,(catppuccin-get-color 'red))))))
-
-  (custom-set-faces
-   ;; Set the color for insertions in the diff highlighting to green.
-   `(diff-hl-insert ((t (:background unspecified :foreground ,(catppuccin-get-color 'green))))))
-
-  ;; Load the Catppuccin theme without prompting for confirmation.
-  (load-theme 'catppuccin :no-confirm))
+  (load-theme 'gruvbox-dark-medium :no-confirm))
 
 
 ;;; UTILITARY FUNCTION TO INSTALL EMACS-KICK
