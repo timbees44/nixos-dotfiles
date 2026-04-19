@@ -122,7 +122,6 @@ in
     bluez-tools
     pkg-config
     libtool
-    mangohud
     unzip
     gnutar
   ];

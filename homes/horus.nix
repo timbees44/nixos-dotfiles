@@ -7,7 +7,6 @@ let
     emacs = "emacs-kick";
     hypr = "hypr";
     foot = "foot";
-    MangoHud = "mangohud";
     nvim = "nvim";
     starship = "starship";
     swaylock = "swaylock";
