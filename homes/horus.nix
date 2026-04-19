@@ -35,6 +35,7 @@ in
     bluez
     bluetui
     brave
+    basedpyright
     btop
     cmake
     codex
@@ -59,6 +60,7 @@ in
     nixpkgs-fmt
     pcmanfm
     ripgrep
+    ruff
     starship
     swaylock-effects
     tmux

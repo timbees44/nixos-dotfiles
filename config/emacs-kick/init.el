@@ -252,10 +252,10 @@
   ;; Configure font settings based on the operating system.
   ;; Ok, this kickstart is meant to be used on the terminal, not on GUI.
   ;; But without this, I fear you could start Graphical Emacs and be sad :(
-  (set-face-attribute 'default nil :family "JetBrainsMono Nerd Font"  :height 100)
+  (set-face-attribute 'default nil :family "JetBrainsMono Nerd Font"  :height 150)
   (when (eq system-type 'darwin)       ;; Check if the system is macOS.
     (setq mac-command-modifier 'meta)  ;; Set the Command key to act as the Meta key.
-    (set-face-attribute 'default nil :family "JetBrainsMono Nerd Font" :height 130))
+    (set-face-attribute 'default nil :family "JetBrainsMono Nerd Font" :height 180))
 
   ;; Save manual customizations to a separate file instead of cluttering `init.el'.
   ;; You can M-x customize, M-x customize-group, or M-x customize-themes, etc.
@@ -775,6 +775,20 @@
   (lsp-headerline-breadcrumb-icons-enable nil)          ;; Disable icons in breadcrumb.
   ;; Semantic settings
   (lsp-semantic-tokens-enable nil))                     ;; Disable semantic tokens.
+
+
+;;; LSP Pyright
+;; Keep Python on a single modern language server instead of relying on
+;; broad server auto-detection across multiple older Python backends.
+(use-package lsp-pyright
+  :ensure t
+  :straight t
+  :after lsp-mode
+  :hook
+  (python-base-mode . (lambda () (require 'lsp-pyright)))
+  :custom
+  (lsp-pyright-langserver-command "basedpyright-langserver")
+  (lsp-pyright-typechecking-mode "basic"))
 
 
 ;;; LSP Additional Servers
