@@ -7,55 +7,23 @@ HISTCONTROL=ignoreboth
 HISTSIZE=32768
 HISTFILESIZE="${HISTSIZE}"
 
-# Bash completion
-if [[ ! -v BASH_COMPLETION_VERSINFO && -f /usr/share/bash-completion/bash_completion ]]; then
-  source /usr/share/bash-completion/bash_completion
-fi
-
 # Ensure command hashing is off for mise
 set +h
-
-# Readline settings (inline replacement for inputrc)
-bind 'set meta-flag on'
-bind 'set input-meta on'
-bind 'set output-meta on'
-bind 'set convert-meta off'
-bind 'set completion-ignore-case on'
-bind 'set completion-prefix-display-length 2'
-bind 'set show-all-if-ambiguous on'
-bind 'set show-all-if-unmodified on'
-bind 'set mark-symlinked-directories on'
-bind 'set match-hidden-files off'
-bind 'set page-completions off'
-bind 'set completion-query-items 200'
-bind 'set visible-stats on'
-bind 'set skip-completed-text on'
-bind 'set colored-stats on'
-bind '"\e[A": history-search-backward'
-bind '"\e[B": history-search-forward'
-bind '"\e[C": forward-char'
-bind '"\e[D": backward-char'
 
 # Environment
 export SUDO_EDITOR="$EDITOR"
 export BAT_THEME=ansi
+export PATH="$HOME/.opencode/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.nix-profile/bin:$PATH"
+export PATH="/etc/profiles/per-user/tim/bin:$PATH"
+if command -v gpgconf >/dev/null 2>&1; then
+  export SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
+fi
 
 # Init tools
-if command -v starship &> /dev/null; then
-  eval "$(starship init bash)"
-fi
-
 if command -v zoxide &> /dev/null; then
   eval "$(zoxide init bash)"
-fi
-
-if command -v fzf &> /dev/null; then
-  if [[ -f /usr/share/fzf/completion.bash ]]; then
-    source /usr/share/fzf/completion.bash
-  fi
-  if [[ -f /usr/share/fzf/key-bindings.bash ]]; then
-    source /usr/share/fzf/key-bindings.bash
-  fi
 fi
 
 # Aliases and helpers
@@ -91,12 +59,49 @@ open() {
 alias c='opencode'
 n() { if [ "$#" -eq 0 ]; then nvim .; else nvim "$@"; fi; }
 
+# Stop here for dumb terminals such as Emacs `M-x shell`.
+if [[ "${TERM:-}" == "dumb" ]] || [[ ! -t 0 ]] || [[ ! -t 1 ]]; then
+  return
+fi
+
+# Bash completion
+if [[ ! -v BASH_COMPLETION_VERSINFO && -f /usr/share/bash-completion/bash_completion ]]; then
+  source /usr/share/bash-completion/bash_completion
+fi
+
+# Readline settings (inline replacement for inputrc)
+bind 'set meta-flag on'
+bind 'set input-meta on'
+bind 'set output-meta on'
+bind 'set convert-meta off'
+bind 'set completion-ignore-case on'
+bind 'set completion-prefix-display-length 2'
+bind 'set show-all-if-ambiguous on'
+bind 'set show-all-if-unmodified on'
+bind 'set mark-symlinked-directories on'
+bind 'set match-hidden-files off'
+bind 'set page-completions off'
+bind 'set completion-query-items 200'
+bind 'set visible-stats on'
+bind 'set skip-completed-text on'
+bind 'set colored-stats on'
+bind '"\e[A": history-search-backward'
+bind '"\e[B": history-search-forward'
+bind '"\e[C": forward-char'
+bind '"\e[D": backward-char'
+
+if command -v starship &> /dev/null; then
+  eval "$(starship init bash)"
+fi
+
+if command -v fzf &> /dev/null; then
+  if [[ -f /usr/share/fzf/completion.bash ]]; then
+    source /usr/share/fzf/completion.bash
+  fi
+  if [[ -f /usr/share/fzf/key-bindings.bash ]]; then
+    source /usr/share/fzf/key-bindings.bash
+  fi
+fi
+
 # Personal additions
 alias ll='ls -la'
-export PATH="$HOME/.opencode/bin:$PATH"
-export PATH="$HOME/.local/bin:$PATH"
-export PATH="$HOME/.nix-profile/bin:$PATH"
-export PATH="/etc/profiles/per-user/tim/bin:$PATH"
-if command -v gpgconf >/dev/null 2>&1; then
-  export SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
-fi
