@@ -1,6 +1,6 @@
 { config, pkgs, lib, doomemacs, primaryUser, linuxHome, ... }:
 let
-  dotfiles = "${config.home.homeDirectory}/nixos-dotfiles/config";
+  dotfiles = "${config.home.homeDirectory}/projects/nixos-dotfiles/config";
   create_symlink = path: config.lib.file.mkOutOfStoreSymlink path;
   doomDir = "${config.home.homeDirectory}/.emacs.d";
 
