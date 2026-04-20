@@ -82,6 +82,7 @@ in
     cmake
     gnumake
     gcc
+    gparted
     pkg-config
     libtool
     unzip

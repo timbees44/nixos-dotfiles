@@ -118,6 +118,7 @@ in
     cmake
     gnumake
     gcc
+    gparted
     pciutils
     bluez
     bluez-tools
