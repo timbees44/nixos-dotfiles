@@ -97,11 +97,12 @@
     (or (string-match "\\*[^*]+\\*" (buffer-name buffer))
         (ek-ai-code-buffer-p buffer)))
   (setq switch-to-prev-buffer-skip 'skip-these-buffers)
-  (dolist (regexp '("\\`\\*.*\\[.*\\].*\\*\\'"
-                    "\\`\\*[Aa][Ii] Code.*\\*\\'"
-                    "\\`\\*ai-code-.*\\*\\'"
-                    "\\`ai-code-mcp-http-server <.*>\\'"))
-    (add-to-list 'consult-buffer-filter regexp))
+  (with-eval-after-load 'consult
+    (dolist (regexp '("\\`\\*.*\\[.*\\].*\\*\\'"
+                      "\\`\\*[Aa][Ii] Code.*\\*\\'"
+                      "\\`\\*ai-code-.*\\*\\'"
+                      "\\`ai-code-mcp-http-server <.*>\\'"))
+      (add-to-list 'consult-buffer-filter regexp)))
 
 
   ;; Configure font settings based on the operating system.
@@ -749,126 +750,22 @@
   :config
   (evil-set-undo-system 'undo-tree)   ;; Uses the undo-tree package as the default undo system
 
-  ;; Set the leader key to space for easier access to custom commands. (setq evil-want-leader t)
-  (setq evil-leader/in-all-states t)  ;; Make the leader key available in all states.
   (setq evil-want-fine-undo t)        ;; Evil uses finer grain undoing steps
-
-  ;; Define the leader key as Space
-  (evil-set-leader 'normal (kbd "SPC"))
-  (evil-set-leader 'visual (kbd "SPC"))
-
-  ;; Keybindings for searching and finding files.
-  (evil-define-key 'normal 'global (kbd "<leader> s f") 'consult-find)
-  (evil-define-key 'normal 'global (kbd "<leader> s g") 'consult-grep)
-  (evil-define-key 'normal 'global (kbd "<leader> s G") 'consult-git-grep)
-  (evil-define-key 'normal 'global (kbd "<leader> s r") 'consult-ripgrep)
-  (evil-define-key 'normal 'global (kbd "<leader> s h") 'consult-info)
-  (evil-define-key 'normal 'global (kbd "<leader> /") 'consult-line)
-
-  ;; Flymake navigation
-  (evil-define-key 'normal 'global (kbd "<leader> x x") 'consult-flymake);; Gives you something like `trouble.nvim'
   (evil-define-key 'normal 'global (kbd "] d") 'flymake-goto-next-error) ;; Go to next Flymake error
   (evil-define-key 'normal 'global (kbd "[ d") 'flymake-goto-prev-error) ;; Go to previous Flymake error
-
-  ;; Dired commands for file management
-  (evil-define-key 'normal 'global (kbd "<leader> x d") 'dired)
-  (evil-define-key 'normal 'global (kbd "<leader> x j") 'dired-jump)
-  (evil-define-key 'normal 'global (kbd "<leader> x f") 'find-file)
 
   ;; Diff-HL navigation for version control
   (evil-define-key 'normal 'global (kbd "] c") 'diff-hl-next-hunk) ;; Next diff hunk
   (evil-define-key 'normal 'global (kbd "[ c") 'diff-hl-previous-hunk) ;; Previous diff hunk
 
-  ;; NeoTree command for file exploration
-  (evil-define-key 'normal 'global (kbd "<leader> e e") 'neotree-toggle)
-  (evil-define-key 'normal 'global (kbd "<leader> e d") 'dired-jump)
-
-  ;; Magit keybindings for Git integration
-  (evil-define-key 'normal 'global (kbd "<leader> g g") 'magit-status)      ;; Open Magit status
-  (evil-define-key 'normal 'global (kbd "<leader> g l") 'magit-log-current) ;; Show current log
-  (evil-define-key 'normal 'global (kbd "<leader> g d") 'magit-diff-buffer-file) ;; Show diff for the current file
-  (evil-define-key 'normal 'global (kbd "<leader> g D") 'diff-hl-show-hunk) ;; Show diff for a hunk
-  (evil-define-key 'normal 'global (kbd "<leader> g b") 'vc-annotate)       ;; Annotate buffer with version control info
-
-  ;; AI coding
-  (evil-define-key 'normal 'global (kbd "<leader> a a") 'ai-code-menu)
-  (evil-define-key 'normal 'global (kbd "<leader> a s") 'ai-code-cli-start)
-  (evil-define-key 'normal 'global (kbd "<leader> a z") 'ai-code-cli-switch-to-buffer-or-hide)
-  (evil-define-key 'normal 'global (kbd "<leader> a q") 'ai-code-ask-question)
-  (evil-define-key 'normal 'global (kbd "<leader> a c") 'ai-code-code-change)
-  (evil-define-key 'normal 'global (kbd "<leader> a p") 'ai-code-open-prompt-file)
-
-  ;; Buffer management keybindings
-  (evil-define-key 'normal 'global (kbd "<leader> b n") 'switch-to-next-buffer) ;; Next buffer
-  (evil-define-key 'normal 'global (kbd "<leader> b p") 'switch-to-prev-buffer) ;; Previous buffer
-  (evil-define-key 'normal 'global (kbd "<leader> b i") 'consult-buffer) ;; Open consult buffer list
-  (evil-define-key 'normal 'global (kbd "<leader> b b") 'ibuffer) ;; Open Ibuffer
-  (evil-define-key 'normal 'global (kbd "<leader> b d") 'kill-current-buffer) ;; Kill current buffer
-  (evil-define-key 'normal 'global (kbd "<leader> b s") 'save-buffer) ;; Save buffer
-  (evil-define-key 'normal 'global (kbd "<leader> b l") 'previous-buffer) ;; Consult buffer
-  (evil-define-key 'normal 'global (kbd "<leader>SPC") 'consult-buffer) ;; Consult buffer
-
-  ;; Project management keybindings
-  (evil-define-key 'normal 'global (kbd "<leader> p b") 'consult-project-buffer) ;; Consult project buffer
-  (evil-define-key 'normal 'global (kbd "<leader> p o") 'ek/project-switch-project-in-workspace) ;; Open/switch project in workspace
-  ;; (evil-define-key 'normal 'global (kbd "<leader> p f") 'project-find-file) ;; Find file in project
-  ;; (evil-define-key 'normal 'global (kbd "<leader> p g") 'project-find-regexp) ;; Find regexp in project
-  (evil-define-key 'normal 'global (kbd "<leader> p k") 'project-kill-buffers) ;; Kill project buffers
-  ;; (evil-define-key 'normal 'global (kbd "<leader> p D") 'project-dired) ;; Dired for project
-  (evil-define-key 'normal 'global (kbd "<leader> p n") 'tab-next) ;; Next workspace
-  (evil-define-key 'normal 'global (kbd "<leader> p p") 'tab-previous) ;; Previous workspace
-  (evil-define-key 'normal 'global (kbd "<leader> p c") 'tab-bar-new-tab) ;; Create workspace
-  (evil-define-key 'normal 'global (kbd "<leader> p x") 'tab-bar-close-tab) ;; Close workspace
-  (evil-define-key 'normal 'global (kbd "<leader> p r") 'tab-bar-rename-tab) ;; Rename workspace
-
   ;; Yank from kill ring
   (evil-define-key 'normal 'global (kbd "P") 'consult-yank-from-kill-ring)
-  (evil-define-key 'normal 'global (kbd "<leader> P") 'consult-yank-from-kill-ring)
-
-  ;; Embark actions for contextual commands
-  (evil-define-key 'normal 'global (kbd "<leader> .") 'embark-act)
-
-  ;; Undo tree visualization
-  (evil-define-key 'normal 'global (kbd "<leader> u") 'undo-tree-visualize)
-
-  ;; Help keybindings
-  (evil-define-key 'normal 'global (kbd "<leader> h m") 'describe-mode) ;; Describe current mode
-  (evil-define-key 'normal 'global (kbd "<leader> h f") 'describe-function) ;; Describe function
-  (evil-define-key 'normal 'global (kbd "<leader> h v") 'describe-variable) ;; Describe variable
-  (evil-define-key 'normal 'global (kbd "<leader> h k") 'describe-key) ;; Describe key
-
-  ;; Window management
-  (evil-define-key 'normal 'global (kbd "<leader> w w") 'other-window)
-  (evil-define-key 'normal 'global (kbd "<leader> w h") 'windmove-left)
-  (evil-define-key 'normal 'global (kbd "<leader> w j") 'windmove-down)
-  (evil-define-key 'normal 'global (kbd "<leader> w k") 'windmove-up)
-  (evil-define-key 'normal 'global (kbd "<leader> w l") 'windmove-right)
-  (evil-define-key 'normal 'global (kbd "<leader> w s") 'ek/split-window-below-and-focus)
-  (evil-define-key 'normal 'global (kbd "<leader> w v") 'ek/split-window-right-and-focus)
-  (evil-define-key 'normal 'global (kbd "<leader> w d") 'delete-window)
-  (evil-define-key 'normal 'global (kbd "<leader> w o") 'delete-other-windows)
-  (evil-define-key 'normal 'global (kbd "<leader> w u") 'winner-undo)
-  (evil-define-key 'normal 'global (kbd "<leader> w r") 'winner-redo)
-
-  ;; Terminal keybindings
-  (evil-define-key 'normal 'global (kbd "<leader> t t") 'ek/vterm-toggle-popup)
-  (evil-define-key 'normal 'global (kbd "<leader> t T") 'ek/vterm-open-full)
-
-  ;; Custom example. Formatting with prettier tool.
-  (evil-define-key 'normal 'global (kbd "<leader> m p")
-                   (lambda ()
-                     (interactive)
-                     (shell-command (concat "prettier --write " (shell-quote-argument (buffer-file-name))))
-                     (revert-buffer t t t)))
 
   ;; LSP commands keybindings
   (evil-define-key 'normal lsp-mode-map
                    ;; (kbd "gd") 'lsp-find-definition                ;; evil-collection already provides gd
                    (kbd "gr") 'lsp-find-references                   ;; Finds LSP references
-                   (kbd "<leader> c a") 'lsp-execute-code-action     ;; Execute code actions
-                   (kbd "<leader> r n") 'lsp-rename                  ;; Rename symbol
-                   (kbd "gI") 'lsp-find-implementation               ;; Find implementation
-                   (kbd "<leader> l f") 'lsp-format-buffer)          ;; Format buffer via lsp
+                   (kbd "gI") 'lsp-find-implementation)              ;; Find implementation
 
 
   (defun ek/lsp-describe-and-jump ()
@@ -902,6 +799,101 @@
 
   ;; Enable evil mode
   (evil-mode 1))
+
+
+;;; GENERAL
+(use-package general
+  :ensure t
+  :straight t
+  :after evil
+  :config
+  (general-create-definer ek/leader
+    :states '(normal visual motion)
+    :keymaps 'override
+    :prefix "SPC"
+    :global-prefix "M-SPC")
+
+  (ek/leader
+    "/" 'consult-line
+    "." 'embark-act
+    "SPC" 'consult-buffer
+    "P" 'consult-yank-from-kill-ring
+    "u" 'undo-tree-visualize
+
+    "a a" 'ai-code-menu
+    "a s" 'ai-code-cli-start
+    "a z" 'ai-code-cli-switch-to-buffer-or-hide
+    "a q" 'ai-code-ask-question
+    "a c" 'ai-code-code-change
+    "a p" 'ai-code-open-prompt-file
+
+    "b n" 'switch-to-next-buffer
+    "b p" 'switch-to-prev-buffer
+    "b i" 'consult-buffer
+    "b b" 'ibuffer
+    "b d" 'kill-current-buffer
+    "b s" 'save-buffer
+    "b l" 'previous-buffer
+
+    "e e" 'neotree-toggle
+    "e d" 'dired-jump
+
+    "g g" 'magit-status
+    "g l" 'magit-log-current
+    "g d" 'magit-diff-buffer-file
+    "g D" 'diff-hl-show-hunk
+    "g b" 'vc-annotate
+
+    "h m" 'describe-mode
+    "h f" 'describe-function
+    "h v" 'describe-variable
+    "h k" 'describe-key
+
+    "m p" (lambda ()
+            (interactive)
+            (shell-command (concat "prettier --write " (shell-quote-argument (buffer-file-name))))
+            (revert-buffer t t t))
+
+    "p b" 'consult-project-buffer
+    "p o" 'ek/project-switch-project-in-workspace
+    "p k" 'project-kill-buffers
+    "p n" 'tab-next
+    "p p" 'tab-previous
+    "p c" 'tab-bar-new-tab
+    "p x" 'tab-bar-close-tab
+    "p r" 'tab-bar-rename-tab
+
+    "s f" 'consult-find
+    "s g" 'consult-grep
+    "s G" 'consult-git-grep
+    "s r" 'consult-ripgrep
+    "s h" 'consult-info
+
+    "t t" 'ek/vterm-toggle-popup
+    "t T" 'ek/vterm-open-full
+
+    "w w" 'other-window
+    "w h" 'windmove-left
+    "w j" 'windmove-down
+    "w k" 'windmove-up
+    "w l" 'windmove-right
+    "w s" 'ek/split-window-below-and-focus
+    "w v" 'ek/split-window-right-and-focus
+    "w d" 'delete-window
+    "w o" 'delete-other-windows
+    "w u" 'winner-undo
+    "w r" 'winner-redo
+
+    "x x" 'consult-flymake
+    "x d" 'dired
+    "x j" 'dired-jump
+    "x f" 'find-file)
+
+  (ek/leader
+    :keymaps 'lsp-mode-map
+    "c a" 'lsp-execute-code-action
+    "r n" 'lsp-rename
+    "l f" 'lsp-format-buffer))
 
 
 ;;; EVIL COLLECTION
