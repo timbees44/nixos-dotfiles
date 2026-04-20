@@ -25,6 +25,9 @@
     let
       inherit (nixpkgs.lib) nixosSystem;
       inherit (darwin.lib) darwinSystem;
+      primaryUser = "tim";
+      linuxHome = "/home/${primaryUser}";
+      darwinHome = "/Users/${primaryUser}";
       mkHome = { hmConfig, system ? "x86_64-linux" }:
         home-manager.lib.homeManagerConfiguration {
           pkgs = import nixpkgs {
@@ -33,7 +36,7 @@
           };
           modules = [ hmConfig ];
           extraSpecialArgs = {
-            inherit doomemacs;
+            inherit doomemacs primaryUser linuxHome darwinHome;
           };
         };
       baseModules = [
@@ -43,6 +46,9 @@
       mkHost = { modules, hmConfig ? null, system ? "x86_64-linux" }:
         nixosSystem {
           inherit system;
+          specialArgs = {
+            inherit primaryUser linuxHome darwinHome;
+          };
           modules =
             baseModules
             ++ modules
@@ -52,10 +58,10 @@
                 home-manager = {
                   useGlobalPkgs = true;
                   useUserPackages = true;
-                  users.tim = import hmConfig;
+                  users.${primaryUser} = import hmConfig;
                   backupFileExtension = "backup";
                   extraSpecialArgs = {
-                    inherit doomemacs;
+                    inherit doomemacs primaryUser linuxHome darwinHome;
                   };
                 };
               }
@@ -65,6 +71,9 @@
       mkDarwinHost = { modules, hmConfig ? null, system ? "aarch64-darwin" }:
         darwinSystem {
           inherit system;
+          specialArgs = {
+            inherit primaryUser linuxHome darwinHome;
+          };
           modules =
             [
               agenix.darwinModules.default
@@ -77,10 +86,10 @@
                 home-manager = {
                   useGlobalPkgs = true;
                   useUserPackages = true;
-                  users.tim = import hmConfig;
+                  users.${primaryUser} = import hmConfig;
                   backupFileExtension = "backup";
                   extraSpecialArgs = {
-                    inherit doomemacs;
+                    inherit doomemacs primaryUser linuxHome darwinHome;
                   };
                 };
               }

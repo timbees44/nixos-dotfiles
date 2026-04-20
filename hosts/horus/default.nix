@@ -1,6 +1,6 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, primaryUser, linuxHome, ... }:
 let
-  timAgeKey = "/home/tim/.config/age/keys.txt";
+  ageKeyPath = "${linuxHome}/.config/age/keys.txt";
 in
 
 {
@@ -20,19 +20,19 @@ in
   };
   services.xserver.videoDrivers = [ "nvidia" ];
 
-  age.identityPaths = [ timAgeKey ];
+  age.identityPaths = [ ageKeyPath ];
   age.secrets = {
     mbsyncrc = {
       file = ../../secrets/mbsyncrc.age;
-      path = "/home/tim/.config/isync/mbsyncrc";
-      owner = "tim";
+      path = "${linuxHome}/.config/isync/mbsyncrc";
+      owner = primaryUser;
       group = "users";
       mode = "0400";
     };
     msmtp-config = {
       file = ../../secrets/msmtp-config.age;
-      path = "/home/tim/.config/msmtp/config";
-      owner = "tim";
+      path = "${linuxHome}/.config/msmtp/config";
+      owner = primaryUser;
       group = "users";
       mode = "0400";
     };
@@ -105,7 +105,7 @@ in
     ];
   };
 
-  users.users.tim = {
+  users.users.${primaryUser} = {
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" ];
   };

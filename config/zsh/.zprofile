@@ -26,3 +26,7 @@ do
     . "$hm_vars"
   fi
 done
+
+if [[ -o interactive ]] && [ -r "$HOME/.zshrc" ]; then
+  . "$HOME/.zshrc"
+fi

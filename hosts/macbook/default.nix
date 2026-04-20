@@ -1,27 +1,27 @@
-{ pkgs, ... }:
+{ pkgs, primaryUser, darwinHome, ... }:
 {
   # Hostname shown in macOS sharing/network panes.
   networking.hostName = "fulgrim";
 
   # Keep user path explicit for Darwin module defaults.
-  users.users.tim.home = "/Users/tim";
+  users.users.${primaryUser}.home = darwinHome;
   # Match existing local Nix install's nixbld group ID.
   ids.gids.nixbld = 350;
 
   # Decrypt agenix secrets using this machine's age identity key.
-  age.identityPaths = [ "/Users/tim/.config/age/keys.txt" ];
+  age.identityPaths = [ "${darwinHome}/.config/age/keys.txt" ];
   age.secrets = {
     mbsyncrc = {
       file = ../../secrets/mbsyncrc.age;
-      path = "/Users/tim/.config/isync/mbsyncrc";
-      owner = "tim";
+      path = "${darwinHome}/.config/isync/mbsyncrc";
+      owner = primaryUser;
       group = "staff";
       mode = "0400";
     };
     msmtp-config = {
       file = ../../secrets/msmtp-config.age;
-      path = "/Users/tim/.config/msmtp/config";
-      owner = "tim";
+      path = "${darwinHome}/.config/msmtp/config";
+      owner = primaryUser;
       group = "staff";
       mode = "0400";
     };
@@ -31,7 +31,7 @@
   nix = {
     settings = {
       experimental-features = [ "nix-command" "flakes" ];
-      trusted-users = [ "root" "tim" ];
+      trusted-users = [ "root" primaryUser ];
       warn-dirty = false;
     };
 
@@ -128,7 +128,7 @@
   };
 
   # Required by newer nix-darwin for user-scoped defaults writes.
-  system.primaryUser = "tim";
+  system.primaryUser = primaryUser;
 
   # Opinionated macOS defaults managed declaratively.
   system.defaults = {

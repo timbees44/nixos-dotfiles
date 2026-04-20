@@ -1,4 +1,4 @@
-{ config, pkgs, lib, doomemacs, ... }:
+{ config, pkgs, lib, doomemacs, primaryUser, darwinHome, ... }:
 let
   # Dotfiles repo checkout location on macOS.
   dotfiles = "${config.home.homeDirectory}/projects/nixos-dotfiles/config";
@@ -67,8 +67,8 @@ let
   ];
 in
 {
-  home.username = "tim";
-  home.homeDirectory = "/Users/tim";
+  home.username = primaryUser;
+  home.homeDirectory = darwinHome;
   # Home Manager compatibility baseline.
   home.stateVersion = "24.05";
 

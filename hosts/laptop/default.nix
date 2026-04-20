@@ -1,7 +1,7 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, primaryUser, linuxHome, ... }:
 let
-  timAgeKey = "/home/tim/.config/age/keys.txt";
-  hasTimAgeKey = builtins.pathExists timAgeKey;
+  ageKeyPath = "${linuxHome}/.config/age/keys.txt";
+  hasAgeKey = builtins.pathExists ageKeyPath;
 in
 
 {
@@ -24,19 +24,19 @@ in
 
   # Bootstrap cleanly without secrets; once the age key exists, a rebuild
   # enables the encrypted mail config automatically.
-  age.identityPaths = lib.mkIf hasTimAgeKey [ timAgeKey ];
-  age.secrets = lib.mkIf hasTimAgeKey {
+  age.identityPaths = lib.mkIf hasAgeKey [ ageKeyPath ];
+  age.secrets = lib.mkIf hasAgeKey {
     mbsyncrc = {
       file = ../../secrets/mbsyncrc.age;
-      path = "/home/tim/.config/isync/mbsyncrc";
-      owner = "tim";
+      path = "${linuxHome}/.config/isync/mbsyncrc";
+      owner = primaryUser;
       group = "users";
       mode = "0400";
     };
     msmtp-config = {
       file = ../../secrets/msmtp-config.age;
-      path = "/home/tim/.config/msmtp/config";
-      owner = "tim";
+      path = "${linuxHome}/.config/msmtp/config";
+      owner = primaryUser;
       group = "users";
       mode = "0400";
     };
@@ -70,7 +70,7 @@ in
     powerOnBoot = true;
   };
 
-  users.users.tim = {
+  users.users.${primaryUser} = {
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" ];
   };

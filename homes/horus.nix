@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, primaryUser, linuxHome, ... }:
 let
   dotfiles = "${config.home.homeDirectory}/nixos-dotfiles/config";
   create_symlink = path: config.lib.file.mkOutOfStoreSymlink path;
@@ -18,8 +18,8 @@ in
     ../modules/theme.nix
   ];
 
-  home.username = "tim";
-  home.homeDirectory = "/home/tim";
+  home.username = primaryUser;
+  home.homeDirectory = linuxHome;
   home.stateVersion = "24.05";
   xdg.enable = true;
 

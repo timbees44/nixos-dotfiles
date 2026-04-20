@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, primaryUser, ... }:
 let
   lanInterface = "enp58s0u1u2"; # primary ethernet NIC
   frigateSecretFile = ../../secrets/frigate-reolink-env.age;
@@ -35,7 +35,7 @@ in
 
   services.homelab = {
     enable = true;
-    user = "tim";
+    user = primaryUser;
     domain = "lan";
     mediaDir = "/srv/media";
     timezone = "Europe/London";
@@ -158,7 +158,7 @@ in
     };
   };
 
-  users.users.tim = {
+  users.users.${primaryUser} = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
     openssh.authorizedKeys = {

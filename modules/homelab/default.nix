@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, primaryUser, ... }:
 with lib;
 let
   cfg = config.services.homelab;
@@ -48,7 +48,7 @@ in {
 
     user = mkOption {
       type = types.str;
-      default = "tim";
+      default = primaryUser;
       description = "User that owns the media data and services.";
     };
 

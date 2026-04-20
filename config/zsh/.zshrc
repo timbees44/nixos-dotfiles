@@ -1,6 +1,7 @@
-if [ -r "$HOME/.zprofile" ]; then
-  source "$HOME/.zprofile"
+if [ -n "${TIM_ZSHRC_LOADED:-}" ]; then
+  return
 fi
+export TIM_ZSHRC_LOADED=1
 
 # starship
 if command -v starship >/dev/null 2>&1; then
@@ -18,7 +19,7 @@ fi
 export CLICOLOR=1
 export LSCOLORS=GxFxCxDxBxegedabagacad
 
-if [[ -f "/opt/homebrew/bin/brew" ]] then
+if [[ -f "/opt/homebrew/bin/brew" ]]; then
   # If you're using macOS, you'll want this enabled
   eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
@@ -40,16 +41,6 @@ zinit light zsh-users/zsh-syntax-highlighting
 zinit light zsh-users/zsh-completions
 zinit light zsh-users/zsh-autosuggestions
 zinit light Aloxaf/fzf-tab
-
-# Add in snippets
-zinit snippet OMZL::git.zsh
-zinit snippet OMZP::git
-zinit snippet OMZP::sudo
-zinit snippet OMZP::archlinux
-zinit snippet OMZP::aws
-zinit snippet OMZP::kubectl
-zinit snippet OMZP::kubectx
-zinit snippet OMZP::command-not-found
 
 # Load completions
 autoload -Uz compinit && compinit
@@ -109,7 +100,7 @@ drs() {
     drb="/nix/var/nix/profiles/default/bin/darwin-rebuild"
   fi
   if [ -n "$drb" ]; then
-    sudo "$drb" switch --flake /Users/tim/projects/nixos-dotfiles#fulgrim
+    sudo "$drb" switch --flake "$HOME/projects/nixos-dotfiles#fulgrim"
   else
     nixbin="$(command -v nix || true)"
     if [ -z "$nixbin" ] && [ -x "/nix/var/nix/profiles/default/bin/nix" ]; then
@@ -120,7 +111,7 @@ drs() {
       return 1
     fi
     sudo -H "$nixbin" --extra-experimental-features "nix-command flakes" \
-      run nix-darwin -- switch --flake /Users/tim/projects/nixos-dotfiles#fulgrim
+      run nix-darwin -- switch --flake "$HOME/projects/nixos-dotfiles#fulgrim"
   fi
 }
 

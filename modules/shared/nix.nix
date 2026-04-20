@@ -1,8 +1,8 @@
-{ lib, ... }:
+{ lib, primaryUser, ... }:
 {
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
-    trusted-users = [ "root" "tim" ];
+    trusted-users = [ "root" primaryUser ];
     auto-optimise-store = true;
     warn-dirty = false;
   };

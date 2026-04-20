@@ -1,7 +1,7 @@
 ;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
 ;; Mail identity
-(defun tim/mail-address-from-msmtp-config ()
+(defun tn/mail-address-from-msmtp-config ()
   "Read the default sender address from the local msmtp config."
   (let ((msmtp-config (expand-file-name "~/.config/msmtp/config")))
     (when (file-readable-p msmtp-config)
@@ -11,7 +11,7 @@
         (when (re-search-forward "^from[[:space:]]+\\(.+\\)$" nil t)
           (string-trim (match-string 1)))))))
 
-(setq user-mail-address (or (tim/mail-address-from-msmtp-config) user-mail-address))
+(setq user-mail-address (or (tn/mail-address-from-msmtp-config) user-mail-address))
 
 ;; Platform helpers
 (defun tn/executable-or-first-existing (&rest candidates)
@@ -29,6 +29,10 @@
   (dolist (dir directories)
     (when (file-directory-p dir)
       (add-to-list 'load-path dir))))
+
+(defun tn/user-profile-path (suffix)
+  "Return SUFFIX under the current user's Nix profile path."
+  (expand-file-name suffix (format "/etc/profiles/per-user/%s" (user-login-name))))
 
 ;; Appearance
 (setq doom-font (font-spec :family "JetBrainsMonoNL NF" :size 14))
@@ -48,7 +52,7 @@
   "Return the preferred ripgrep executable path."
   (tn/executable-or-first-existing
    "rg"
-   "/etc/profiles/per-user/tim/bin/rg"
+   (tn/user-profile-path "bin/rg")
    "/run/current-system/sw/bin/rg"
    (expand-file-name "~/.nix-profile/bin/rg")
    "/opt/homebrew/bin/rg"
@@ -58,7 +62,7 @@
   "Return the preferred fd executable path."
   (tn/executable-or-first-existing
    "fd"
-   "/etc/profiles/per-user/tim/bin/fd"
+   (tn/user-profile-path "bin/fd")
    "/run/current-system/sw/bin/fd"
    (expand-file-name "~/.nix-profile/bin/fd")))
 
@@ -81,7 +85,7 @@
   (tn/executable-or-first-existing
    (getenv "SHELL")
    "/run/current-system/sw/bin/bash"
-   "/etc/profiles/per-user/tim/bin/bash"
+   (tn/user-profile-path "bin/bash")
    "/opt/homebrew/bin/bash"
    "/bin/bash"
    "/bin/zsh"
@@ -268,7 +272,7 @@ This keeps screen-line wrapping in sync after window resizes."
              "mu"
              "/opt/homebrew/bin/mu"
              "/usr/local/bin/mu"
-             "/etc/profiles/per-user/tim/bin/mu"
+             (tn/user-profile-path "bin/mu")
              "/run/current-system/sw/bin/mu")))
   (setq mu4e-mu-binary mu-binary))
 (tn/add-existing-directories-to-load-path
@@ -276,21 +280,21 @@ This keeps screen-line wrapping in sync after window resizes."
  "/opt/homebrew/opt/mu/share/emacs/site-lisp/mu4e"
  "/usr/local/share/emacs/site-lisp/mu/mu4e"
  "/usr/local/opt/mu/share/emacs/site-lisp/mu4e"
- "/etc/profiles/per-user/tim/share/emacs/site-lisp/mu4e"
+ (tn/user-profile-path "share/emacs/site-lisp/mu4e")
  "/run/current-system/sw/share/emacs/site-lisp/mu4e")
 
 ;; mu4e
 (after! mu4e
-  (let ((mail-address (tim/mail-address-from-msmtp-config))
+  (let ((mail-address (tn/mail-address-from-msmtp-config))
         (mbsync
          (tn/executable-or-first-existing
           "mbsync"
-          "/etc/profiles/per-user/tim/bin/mbsync"
+          (tn/user-profile-path "bin/mbsync")
           "/run/current-system/sw/bin/mbsync"))
         (msmtp
          (tn/executable-or-first-existing
           "msmtp"
-          "/etc/profiles/per-user/tim/bin/msmtp"
+          (tn/user-profile-path "bin/msmtp")
           "/run/current-system/sw/bin/msmtp")))
     (setq mu4e-maildir "~/.mail"
           mu4e-user-mail-address-list (when mail-address (list mail-address))
