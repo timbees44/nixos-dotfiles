@@ -136,6 +136,14 @@ in
     })
     configs;
 
+  home.file."pictures/walls/.keep" = {
+    text = "";
+  };
+
+  home.file."pictures/walls/prometheus.png" = {
+    source = create_symlink "${dotfiles}/walls/prometheus.png";
+  };
+
   # Install/update Doom core files on each activation.
   home.activation.doomInstall = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     doomSrc=${lib.escapeShellArg doomemacs}

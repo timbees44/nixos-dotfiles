@@ -92,11 +92,37 @@ export EDITOR='vi'
 alias vi="nvim"
 alias vim="nvim"
 alias ll="ls -l"
-alias drs="sudo /run/current-system/sw/bin/darwin-rebuild switch --flake /Users/tim/projects/nixos-dotfiles#fulgrim"
 alias sb="cd ~/Documents/second_brain/"
 alias pr="cd ~/projects/"
 alias dot="cd ~/.dotfiles/"
 alias htb="cd ~/projects/htb/"
+
+unalias drs 2>/dev/null
+drs() {
+  local drb
+  local nixbin
+  drb="$(command -v darwin-rebuild || true)"
+  if [ -z "$drb" ] && [ -x "/etc/profiles/per-user/$USER/bin/darwin-rebuild" ]; then
+    drb="/etc/profiles/per-user/$USER/bin/darwin-rebuild"
+  fi
+  if [ -z "$drb" ] && [ -x "/nix/var/nix/profiles/default/bin/darwin-rebuild" ]; then
+    drb="/nix/var/nix/profiles/default/bin/darwin-rebuild"
+  fi
+  if [ -n "$drb" ]; then
+    sudo "$drb" switch --flake /Users/tim/projects/nixos-dotfiles#fulgrim
+  else
+    nixbin="$(command -v nix || true)"
+    if [ -z "$nixbin" ] && [ -x "/nix/var/nix/profiles/default/bin/nix" ]; then
+      nixbin="/nix/var/nix/profiles/default/bin/nix"
+    fi
+    if [ -z "$nixbin" ]; then
+      echo "nix not found in PATH"
+      return 1
+    fi
+    sudo -H "$nixbin" --extra-experimental-features "nix-command flakes" \
+      run nix-darwin -- switch --flake /Users/tim/projects/nixos-dotfiles#fulgrim
+  fi
+}
 
 # Shell integrations
 if command -v fzf >/dev/null 2>&1; then
