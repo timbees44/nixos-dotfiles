@@ -171,6 +171,49 @@
   (split-window-right)
   (other-window 1))
 
+(defun ek/tab-name-for-project-root (root)
+  "Return a human-friendly tab name for project ROOT."
+  (file-name-nondirectory (directory-file-name root)))
+
+(defun ek/tab-index-by-name (name)
+  "Return the 1-based tab index for tab NAME, or nil when absent."
+  (let ((index 1)
+        match)
+    (dolist (tab (tab-bar-tabs))
+      (when (equal (alist-get 'name tab) name)
+        (setq match index))
+      (setq index (1+ index)))
+    match))
+
+(defun ek/switch-or-create-project-workspace (dir)
+  "Switch to or create a tab workspace for project DIR."
+  (interactive "DProject directory: ")
+  (let* ((root (file-name-as-directory (expand-file-name dir)))
+         (tab-name (ek/tab-name-for-project-root root))
+         (existing (ek/tab-index-by-name tab-name)))
+    (if existing
+        (tab-bar-select-tab existing)
+      (tab-bar-new-tab)
+      (tab-bar-rename-tab tab-name))
+    (let ((default-directory root))
+      (project-switch-project root))))
+
+(defun ek/project-switch-project-in-workspace ()
+  "Open the selected project in its own tab workspace."
+  (interactive)
+  (ek/switch-or-create-project-workspace
+   (project-prompt-project-dir)))
+
+(use-package tab-bar
+  :ensure nil
+  :custom
+  (tab-bar-close-button-show nil)
+  (tab-bar-new-button-show nil)
+  (tab-bar-tab-hints t)
+  (tab-bar-show 1)
+  :init
+  (tab-bar-mode 1))
+
 (use-package window
   :ensure nil       ;; This is built-in, no need to fetch it.
   :custom
@@ -740,8 +783,8 @@
   (evil-define-key 'normal 'global (kbd "<leader> a p") 'ai-code-open-prompt-file)
 
   ;; Buffer management keybindings
-  (evil-define-key 'normal 'global (kbd "] b") 'switch-to-next-buffer) ;; Switch to next buffer
-  (evil-define-key 'normal 'global (kbd "[ b") 'switch-to-prev-buffer) ;; Switch to previous buffer
+  (evil-define-key 'normal 'global (kbd "<leader> b n") 'switch-to-next-buffer) ;; Next buffer
+  (evil-define-key 'normal 'global (kbd "<leader> b p") 'switch-to-prev-buffer) ;; Previous buffer
   (evil-define-key 'normal 'global (kbd "<leader> b i") 'consult-buffer) ;; Open consult buffer list
   (evil-define-key 'normal 'global (kbd "<leader> b b") 'ibuffer) ;; Open Ibuffer
   (evil-define-key 'normal 'global (kbd "<leader> b d") 'kill-current-buffer) ;; Kill current buffer
@@ -753,11 +796,16 @@
 
   ;; Project management keybindings
   (evil-define-key 'normal 'global (kbd "<leader> p b") 'consult-project-buffer) ;; Consult project buffer
-  (evil-define-key 'normal 'global (kbd "<leader> p p") 'project-switch-project) ;; Switch project
+  (evil-define-key 'normal 'global (kbd "<leader> p o") 'ek/project-switch-project-in-workspace) ;; Open/switch project in workspace
   (evil-define-key 'normal 'global (kbd "<leader> p f") 'project-find-file) ;; Find file in project
   (evil-define-key 'normal 'global (kbd "<leader> p g") 'project-find-regexp) ;; Find regexp in project
   (evil-define-key 'normal 'global (kbd "<leader> p k") 'project-kill-buffers) ;; Kill project buffers
   (evil-define-key 'normal 'global (kbd "<leader> p D") 'project-dired) ;; Dired for project
+  (evil-define-key 'normal 'global (kbd "<leader> p n") 'tab-next) ;; Next workspace
+  (evil-define-key 'normal 'global (kbd "<leader> p p") 'tab-previous) ;; Previous workspace
+  (evil-define-key 'normal 'global (kbd "<leader> p c") 'tab-bar-new-tab) ;; Create workspace
+  (evil-define-key 'normal 'global (kbd "<leader> p x") 'tab-bar-close-tab) ;; Close workspace
+  (evil-define-key 'normal 'global (kbd "<leader> p r") 'tab-bar-rename-tab) ;; Rename workspace
 
   ;; Yank from kill ring
   (evil-define-key 'normal 'global (kbd "P") 'consult-yank-from-kill-ring)
@@ -791,11 +839,6 @@
   ;; Terminal keybindings
   (evil-define-key 'normal 'global (kbd "<leader> t t") 'ek/vterm-toggle-popup)
   (evil-define-key 'normal 'global (kbd "<leader> t T") 'ek/vterm-open-full)
-
-  ;; Tab navigation
-  (evil-define-key 'normal 'global (kbd "] t") 'tab-next) ;; Go to next tab
-  (evil-define-key 'normal 'global (kbd "[ t") 'tab-previous) ;; Go to previous tab
-
 
   ;; Custom example. Formatting with prettier tool.
   (evil-define-key 'normal 'global (kbd "<leader> m p")

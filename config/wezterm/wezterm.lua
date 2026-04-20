@@ -19,6 +19,9 @@ config.window_decorations = "RESIZE"
 -- Do not prompt when closing windows launched for helper tasks
 config.window_close_confirmation = "NeverPrompt"
 
+-- Force the same login-shell startup path as the rest of macOS terminals.
+config.default_prog = { "/bin/zsh", "-l" }
+
 -- Remove default padding so the prompt hugs the top edge
 config.window_padding = {
   left = 0,

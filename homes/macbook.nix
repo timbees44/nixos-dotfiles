@@ -1,15 +1,13 @@
-{ config, pkgs, lib, doomemacs, primaryUser, darwinHome, ... }:
+{ config, pkgs, lib, primaryUser, darwinHome, ... }:
 let
   # Dotfiles repo checkout location on macOS.
   dotfiles = "${config.home.homeDirectory}/projects/nixos-dotfiles/config";
   create_symlink = path: config.lib.file.mkOutOfStoreSymlink path;
-  # Doom framework install destination.
-  doomDir = "${config.home.homeDirectory}/.emacs.d";
 
   # Config directories to expose under ~/.config via symlinks.
   configs = {
     aerospace = "aerospace";
-    doom = "doom";
+    emacs = "emacs-kick";
     karabiner = "karabiner";
     nvim = "nvim";
     sketchybar = "sketchybar";
@@ -104,28 +102,23 @@ in
     source = create_symlink "${dotfiles}/bash/.bash_profile";
   };
 
-  home.file.".zshrc" = {
-    source = create_symlink "${dotfiles}/zsh/.zshrc";
+  # Keep zsh startup local to the Home Manager generation on macOS.
+  # This avoids prompt startup breaking if the out-of-store repo symlink
+  # is missing or stale on the host.
+  home.file.".zshrc".text = builtins.readFile ../config/zsh/.zshrc;
+
+  home.file.".zprofile".text = builtins.readFile ../config/zsh/.zprofile;
+
+  # Emacs still prefers ~/.emacs.d/init.el when ~/.emacs.d exists.
+  # Keep config source in ~/.config/emacs (xdg) and bridge with a shim.
+  home.file.".emacs.d/init.el" = {
+    source = create_symlink "${dotfiles}/emacs-kick/init.el";
   };
 
-  home.file.".zprofile" = {
-    source = create_symlink "${dotfiles}/zsh/.zprofile";
-  };
-
-  # Provide legacy Doom path expected by some setups/tools.
-  home.file.".doom.d" = {
-    source = create_symlink "${dotfiles}/doom";
-  };
-
-  # Doom's mu4e module still probes ~/.config/isyncrc as an mbsync fallback.
+  # Some mail tooling still probes ~/.config/isyncrc as an mbsync fallback.
   # Keep a compatibility link to the real XDG config file.
   home.file.".config/isyncrc" = {
     source = create_symlink "${config.home.homeDirectory}/.config/isync/mbsyncrc";
-  };
-
-  # Keep Doom CLI and Emacs aligned on the same config location.
-  home.sessionVariables = {
-    DOOMDIR = "${config.home.homeDirectory}/.config/doom";
   };
 
   # Create ~/.config/* links from the `configs` attrset above.
@@ -154,29 +147,6 @@ tell application "System Events"
   end tell
 end tell
 EOF
-    fi
-  '';
-
-  # Install/update Doom core files on each activation.
-  home.activation.doomInstall = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    doomSrc=${lib.escapeShellArg doomemacs}
-    doomDest=${lib.escapeShellArg doomDir}
-    mkdir -p "$doomDest"
-    ${pkgs.rsync}/bin/rsync -a --delete \
-      --chmod=Du+rwx,Fu+rw \
-      --exclude='.local/' \
-      "$doomSrc"/ "$doomDest"/
-    for d in .local .local/etc .local/cache .local/state; do
-      install -d -m 700 "$doomDest/$d"
-    done
-  '';
-
-  # Sync Doom modules/packages after core files are in place.
-  home.activation.doomSync = lib.hm.dag.entryAfter [ "doomInstall" ] ''
-    doomBin="${doomDir}/bin/doom"
-    if [ -x "$doomBin" ]; then
-      export PATH=${lib.makeBinPath [ pkgs.emacs pkgs.git pkgs.gnutar pkgs.gzip pkgs.coreutils ]}:$PATH
-      "$doomBin" sync || true
     fi
   '';
 }
