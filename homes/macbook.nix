@@ -144,6 +144,19 @@ in
     source = create_symlink "${dotfiles}/walls/prometheus.png";
   };
 
+  home.activation.setMacWallpaper = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    wallpaper="$HOME/pictures/walls/prometheus.png"
+    if [ -f "$wallpaper" ]; then
+      /usr/bin/osascript <<EOF
+tell application "System Events"
+  tell every desktop
+    set picture to POSIX file "$wallpaper"
+  end tell
+end tell
+EOF
+    fi
+  '';
+
   # Install/update Doom core files on each activation.
   home.activation.doomInstall = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     doomSrc=${lib.escapeShellArg doomemacs}

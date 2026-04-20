@@ -3,6 +3,13 @@
 # === CONFIG ROOT ===
 CONFIG_DIR="$HOME/.config/sketchybar"
 PLUGIN_DIR="$CONFIG_DIR/plugins"
+AEROSPACE_BIN="$(command -v aerospace || true)"
+if [ -z "$AEROSPACE_BIN" ] && [ -x "/opt/homebrew/bin/aerospace" ]; then
+  AEROSPACE_BIN="/opt/homebrew/bin/aerospace"
+fi
+if [ -z "$AEROSPACE_BIN" ] && [ -x "/run/current-system/sw/bin/aerospace" ]; then
+  AEROSPACE_BIN="/run/current-system/sw/bin/aerospace"
+fi
 
 # === COLORS ===
 CLR_BG=0x00000000          # Transparent bar background
@@ -26,7 +33,7 @@ LABELS=("一" "二" "三" "四" "五" "六" "七" "八" "九")
 LEFT_SPACE_ITEMS=()
 INDEX=0
 
-for sid in $(aerospace list-workspaces --all); do
+for sid in $("$AEROSPACE_BIN" list-workspaces --all 2>/dev/null); do
   label="${LABELS[$INDEX]:-$sid}"
   item="space.$sid"
   LEFT_SPACE_ITEMS+=("$item")
@@ -45,14 +52,14 @@ for sid in $(aerospace list-workspaces --all); do
       icon.padding_right="$ICON_PADDING" \
       label.padding_left="$LABEL_PADDING" \
       label.padding_right="$LABEL_PADDING" \
-      click_script="aerospace workspace $sid && sketchybar --trigger aerospace_workspace_change" \
+      click_script="$AEROSPACE_BIN workspace $sid && sketchybar --trigger aerospace_workspace_change" \
       script="$PLUGIN_DIR/aerospace.sh $sid"
 
   ((INDEX++))
 done
 
 # Ensure active workspace is highlighted on first load.
-focused_ws="$(aerospace list-workspaces --focused 2>/dev/null | head -n 1)"
+focused_ws="$("$AEROSPACE_BIN" list-workspaces --focused 2>/dev/null | head -n 1)"
 if [ -n "$focused_ws" ]; then
   sketchybar --set "space.$focused_ws" \
     label.color="$CLR_FG" \
