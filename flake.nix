@@ -10,24 +10,18 @@
     agenix = {
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
-      # Reuse the same nix-darwin revision for agenix's Darwin module graph.
-      inputs.darwin.follows = "darwin";
     };
-    # nix-darwin drives macOS system configuration.
-    darwin.url = "github:lnl7/nix-darwin/master";
     doomemacs = {
       url = "github:doomemacs/doomemacs";
       flake = false;
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, agenix, darwin, doomemacs, ... }:
+  outputs = inputs@{ self, nixpkgs, home-manager, agenix, doomemacs, ... }:
     let
       inherit (nixpkgs.lib) nixosSystem;
-      inherit (darwin.lib) darwinSystem;
       primaryUser = "tim";
       linuxHome = "/home/${primaryUser}";
-      darwinHome = "/Users/${primaryUser}";
       mkHome = { hmConfig, system ? "x86_64-linux" }:
         home-manager.lib.homeManagerConfiguration {
           pkgs = import nixpkgs {
@@ -36,7 +30,7 @@
           };
           modules = [ hmConfig ];
           extraSpecialArgs = {
-            inherit doomemacs primaryUser linuxHome darwinHome;
+            inherit doomemacs primaryUser linuxHome;
           };
         };
       baseModules = [
@@ -47,7 +41,7 @@
         nixosSystem {
           inherit system;
           specialArgs = {
-            inherit primaryUser linuxHome darwinHome;
+            inherit primaryUser linuxHome;
           };
           modules =
             baseModules
@@ -61,35 +55,7 @@
                   users.${primaryUser} = import hmConfig;
                   backupFileExtension = "backup";
                   extraSpecialArgs = {
-                    inherit doomemacs primaryUser linuxHome darwinHome;
-                  };
-                };
-              }
-            ]);
-        };
-      # Helper for Darwin hosts (separate from NixOS module system).
-      mkDarwinHost = { modules, hmConfig ? null, system ? "aarch64-darwin" }:
-        darwinSystem {
-          inherit system;
-          specialArgs = {
-            inherit primaryUser linuxHome darwinHome;
-          };
-          modules =
-            [
-              agenix.darwinModules.default
-            ]
-            ++ modules
-            ++ (if hmConfig == null then [ ] else [
-              # Integrate Home Manager as a nix-darwin module.
-              home-manager.darwinModules.home-manager
-              {
-                home-manager = {
-                  useGlobalPkgs = true;
-                  useUserPackages = true;
-                  users.${primaryUser} = import hmConfig;
-                  backupFileExtension = "backup";
-                  extraSpecialArgs = {
-                    inherit doomemacs primaryUser linuxHome darwinHome;
+                    inherit doomemacs primaryUser linuxHome;
                   };
                 };
               }
@@ -116,16 +82,6 @@
             ./modules/homelab
             ./hosts/server/default.nix
           ];
-        };
-      };
-
-      darwinConfigurations = {
-        # Local macOS target: `darwin-rebuild switch --flake .#fulgrim`
-        fulgrim = mkDarwinHost {
-          modules = [
-            ./hosts/macbook/default.nix
-          ];
-          hmConfig = ./homes/macbook.nix;
         };
       };
 

@@ -14,10 +14,6 @@ setopt HIST_FIND_NO_DUPS
 
 # Environment
 export BAT_THEME=ansi
-export PATH="$HOME/.opencode/bin:$PATH"
-export PATH="$HOME/.local/bin:$PATH"
-export PATH="$HOME/.nix-profile/bin:$PATH"
-export PATH="/etc/profiles/per-user/$USER/bin:$PATH"
 
 if command -v gpgconf >/dev/null 2>&1; then
   export SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
@@ -36,7 +32,12 @@ if command -v eza >/dev/null 2>&1; then
   alias lta='lt -a'
 fi
 
-alias ff="fzf --preview 'bat --style=numbers --color=always {}'"
+if command -v fzf >/dev/null 2>&1 && command -v bat >/dev/null 2>&1; then
+  alias ff="fzf --preview 'bat --style=numbers --color=always {}'"
+elif command -v fzf >/dev/null 2>&1; then
+  alias ff='fzf'
+fi
+
 alias vi='nvim'
 alias vim='nvim'
 alias ll='ls -la'
@@ -51,7 +52,6 @@ n() {
 }
 
 if command -v zoxide >/dev/null 2>&1; then
-  alias cd='zd'
   zd() {
     if [ "$#" -eq 0 ]; then
       builtin cd ~ && return
@@ -61,6 +61,7 @@ if command -v zoxide >/dev/null 2>&1; then
       z "$@" && printf '%s\n' "-> $(pwd)" || echo "Error: Directory not found"
     fi
   }
+  alias cd='zd'
 fi
 
 # Stop here for dumb terminals such as Emacs `M-x shell`.

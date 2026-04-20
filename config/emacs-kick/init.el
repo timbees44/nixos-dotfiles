@@ -109,7 +109,15 @@
   ;; But without this, I fear you could start Graphical Emacs and be sad :(
   (set-face-attribute 'default nil :family "JetBrainsMono Nerd Font"  :height 150)
   (when (eq system-type 'darwin)       ;; Check if the system is macOS.
-    (setq mac-command-modifier 'meta)  ;; Set the Command key to act as the Meta key.
+    ;; Keep Command as Meta and leave Option free for window-manager bindings.
+    (setq mac-command-modifier 'meta
+          mac-option-key-is-meta nil
+          mac-option-modifier 'none
+          mac-right-option-modifier 'none
+          mac-pass-option-to-system nil
+          ns-command-modifier 'meta
+          ns-option-key-is-meta nil
+          ns-option-modifier 'none)  ;; Set the Command key to act as the Meta key.
     (set-face-attribute 'default nil :family "JetBrainsMono Nerd Font" :height 180))
 
   ;; Save manual customizations to a separate file instead of cluttering `init.el'.
@@ -128,6 +136,10 @@
 
   (when scroll-bar-mode
     (scroll-bar-mode -1))      ;; Disable the scroll bar if it is active.
+
+  (when (eq system-type 'darwin)
+    ;; Keep the GUI frame free of macOS title-bar chrome.
+    (add-to-list 'default-frame-alist '(undecorated-round . t)))
 
   (global-hl-line-mode -1)     ;; Disable highlight of the current line
   (global-auto-revert-mode 1)  ;; Enable global auto-revert mode to keep buffers up to date with their corresponding files.
@@ -196,7 +208,7 @@
       (tab-bar-new-tab)
       (tab-bar-rename-tab tab-name))
     (let ((default-directory root))
-      (project-switch-project root))))
+      (dired root))))
 
 (defun ek/project-switch-project-in-workspace ()
   "Open the selected project in its own tab workspace."
@@ -210,7 +222,7 @@
   (tab-bar-close-button-show nil)
   (tab-bar-new-button-show nil)
   (tab-bar-tab-hints t)
-  (tab-bar-show 1)
+  (tab-bar-show 0)
   :init
   (tab-bar-mode 1))
 
@@ -262,6 +274,10 @@
      (".*" "open" "xdg-open")))                              ;; Default opening command for other files.
   (dired-kill-when-opening-new-dired-buffer t)               ;; Close the previous buffer when opening a new `dired' instance.
   :config
+  (with-eval-after-load 'evil-collection-dired
+    (define-key (evil-get-auxiliary-keymap dired-mode-map 'normal t)
+                (kbd "SPC")
+                (lookup-key evil-normal-state-map (kbd "SPC"))))
   (when (eq system-type 'darwin)
     (let ((gls (executable-find "gls")))                     ;; Use GNU ls on macOS if available.
       (when gls
@@ -797,10 +813,10 @@
   ;; Project management keybindings
   (evil-define-key 'normal 'global (kbd "<leader> p b") 'consult-project-buffer) ;; Consult project buffer
   (evil-define-key 'normal 'global (kbd "<leader> p o") 'ek/project-switch-project-in-workspace) ;; Open/switch project in workspace
-  (evil-define-key 'normal 'global (kbd "<leader> p f") 'project-find-file) ;; Find file in project
-  (evil-define-key 'normal 'global (kbd "<leader> p g") 'project-find-regexp) ;; Find regexp in project
+  ;; (evil-define-key 'normal 'global (kbd "<leader> p f") 'project-find-file) ;; Find file in project
+  ;; (evil-define-key 'normal 'global (kbd "<leader> p g") 'project-find-regexp) ;; Find regexp in project
   (evil-define-key 'normal 'global (kbd "<leader> p k") 'project-kill-buffers) ;; Kill project buffers
-  (evil-define-key 'normal 'global (kbd "<leader> p D") 'project-dired) ;; Dired for project
+  ;; (evil-define-key 'normal 'global (kbd "<leader> p D") 'project-dired) ;; Dired for project
   (evil-define-key 'normal 'global (kbd "<leader> p n") 'tab-next) ;; Next workspace
   (evil-define-key 'normal 'global (kbd "<leader> p p") 'tab-previous) ;; Previous workspace
   (evil-define-key 'normal 'global (kbd "<leader> p c") 'tab-bar-new-tab) ;; Create workspace

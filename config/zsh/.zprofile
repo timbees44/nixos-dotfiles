@@ -9,15 +9,22 @@ add_path() {
   fi
 }
 
+export BAT_THEME=ansi
+
+add_path "$HOME/.opencode/bin"
+add_path "$HOME/projects/nixos-dotfiles/config/scripts"
 add_path "$HOME/.cargo/bin"
 add_path "$HOME/.local/bin"
 add_path "$HOME/.emacs.d/bin"
 add_path "$HOME/.config/emacs/bin"
 add_path "$HOME/.nix-profile/bin"
 add_path "/etc/profiles/per-user/$USER/bin"
+add_path "/nix/var/nix/profiles/system/sw/bin"
 add_path "/run/current-system/sw/bin"
+add_path "/opt/homebrew/bin"
+add_path "/usr/local/bin"
 
-# Import Home Manager session variables when the profile is available.
+# Import Home Manager session variables when available.
 for hm_vars in \
   "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh" \
   "/etc/profiles/per-user/$USER/etc/profile.d/hm-session-vars.sh"

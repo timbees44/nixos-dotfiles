@@ -14,6 +14,7 @@ set +h
 export SUDO_EDITOR="$EDITOR"
 export BAT_THEME=ansi
 export PATH="$HOME/.opencode/bin:$PATH"
+export PATH="$HOME/projects/nixos-dotfiles/config/scripts:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.nix-profile/bin:$PATH"
 export PATH="/etc/profiles/per-user/tim/bin:$PATH"

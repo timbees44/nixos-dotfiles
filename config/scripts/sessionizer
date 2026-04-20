@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DIRS=(
+  "$HOME/Documents/second_brain/"
+  "$HOME"
+  "$HOME/.dotfiles"
+  "$HOME/projects"
+)
+
+if [[ $# -eq 1 ]]; then
+  selected="$1"
+else
+  if ! command -v fd >/dev/null 2>&1; then
+    echo "fd is required" >&2
+    exit 1
+  fi
+
+  if command -v sk >/dev/null 2>&1; then
+    selected="$(
+      fd . --type d --max-depth 1 --full-path "${DIRS[@]}" \
+        | sed "s|^$HOME/||" \
+        | sk --margin 10% --color="bw"
+    )"
+  elif command -v fzf >/dev/null 2>&1; then
+    selected="$(
+      fd . --type d --max-depth 1 --full-path "${DIRS[@]}" \
+        | sed "s|^$HOME/||" \
+        | fzf
+    )"
+  else
+    echo "skim (sk) or fzf is required" >&2
+    exit 1
+  fi
+
+  [[ -n "${selected:-}" ]] && selected="$HOME/$selected"
+fi
+
+[[ -n "${selected:-}" ]] || exit 0
+[[ -d "$selected" ]] || {
+  echo "Directory not found: $selected" >&2
+  exit 1
+}
+
+selected_name="$(basename "$selected" | tr . _)"
+if ! tmux has-session -t "$selected_name" 2>/dev/null; then
+  tmux new-session -ds "$selected_name" -c "$selected"
+  tmux select-window -t "$selected_name:1"
+fi
+
+if [[ -n "${TMUX:-}" ]]; then
+  tmux switch-client -t "$selected_name"
+else
+  tmux attach-session -t "$selected_name"
+fi
