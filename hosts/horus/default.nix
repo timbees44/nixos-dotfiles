@@ -107,6 +107,7 @@ in
 
   users.users.${primaryUser} = {
     isNormalUser = true;
+    shell = pkgs.bashInteractive;
     extraGroups = [ "wheel" "networkmanager" ];
   };
 

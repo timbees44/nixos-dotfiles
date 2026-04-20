@@ -34,6 +34,13 @@ do
   fi
 done
 
+# Autostart the compositor from the first Linux TTY when no graphical session is running.
+if [ "$(uname -s)" = "Linux" ] && [ -z "$WAYLAND_DISPLAY" ] && [ -z "$DISPLAY" ] && [ "${XDG_VTNR:-}" = "1" ]; then
+  if command -v uwsm >/dev/null 2>&1 && uwsm check may-start; then
+    exec uwsm start hyprland.desktop
+  fi
+fi
+
 if [[ -o interactive ]] && [ -r "$HOME/.zshrc" ]; then
   . "$HOME/.zshrc"
 fi
