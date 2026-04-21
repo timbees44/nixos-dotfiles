@@ -41,6 +41,7 @@ in
     jq
     neovim
     nixpkgs-fmt
+    pyright
     ripgrep
     starship
     tmux
