@@ -259,8 +259,11 @@
 (defun ek/project-switch-project-in-workspace ()
   "Open the selected project in its own tab workspace."
   (interactive)
-  (ek/switch-or-create-project-workspace
-   (project-prompt-project-dir)))
+  (let ((dir (project-prompt-project-dir)))
+    (let ((default-directory dir))
+      (when-let ((project (project-current nil)))
+        (project-remember-project project)))
+    (ek/switch-or-create-project-workspace dir)))
 
 (use-package tab-bar
   :ensure nil
@@ -615,7 +618,7 @@
   (lsp-completion-provider :none)                       ;; Disable the default completion provider.
   (lsp-session-file (locate-user-emacs-file ".lsp-session")) ;; Specify session file location.
   (lsp-log-io nil)                                      ;; Disable IO logging for speed.
-  (lsp-idle-delay 0.5)                                  ;; Set the delay for LSP to 0 (debouncing).
+  (lsp-idle-delay 1.0)                                  ;; Give the buffer time to settle before LSP chatter.
   (lsp-keep-workspace-alive nil)                        ;; Disable keeping the workspace alive.
   ;; Core settings
   (lsp-enable-xref t)                                   ;; Enable cross-references.
@@ -628,12 +631,12 @@
   (lsp-enable-indentation nil)                          ;; Disable indentation.
   (lsp-enable-on-type-formatting nil)                   ;; Disable on-type formatting.
   (lsp-enable-suggest-server-download t)                ;; Enable server download suggestion.
-  (lsp-enable-symbol-highlighting t)                    ;; Enable symbol highlighting.
-  (lsp-enable-text-document-color t)                    ;; Enable text document color.
+  (lsp-enable-symbol-highlighting nil)                  ;; Disable symbol repainting on cursor movement.
+  (lsp-enable-text-document-color nil)                  ;; Disable inline color scanning.
   ;; Modeline settings
   (lsp-modeline-code-actions-enable nil)                ;; Keep modeline clean.
   (lsp-modeline-diagnostics-enable nil)                 ;; Use `flymake' instead.
-  (lsp-modeline-workspace-status-enable t)              ;; Display "LSP" in the modeline when enabled.
+  (lsp-modeline-workspace-status-enable nil)            ;; Avoid extra modeline updates.
   (lsp-signature-doc-lines 1)                           ;; Limit echo area to one line.
   (lsp-eldoc-render-all t)                              ;; Render all ElDoc messages.
   ;; Completion settings
@@ -642,8 +645,9 @@
   (lsp-enable-snippet nil)                              ;; Disable snippets
   (lsp-completion-show-kind t)                          ;; Show kind in completions.
   ;; Lens settings
-  (lsp-lens-enable t)                                   ;; Enable lens support.
+  (lsp-lens-enable nil)                                 ;; Lenses add noticeable buffer churn.
   ;; Headerline settings
+  (lsp-headerline-breadcrumb-enable nil)                ;; Breadcrumbs are useful, but expensive in large buffers.
   (lsp-headerline-breadcrumb-enable-symbol-numbers t)   ;; Enable symbol numbers in the headerline.
   (lsp-headerline-arrow "▶")                            ;; Set arrow for headerline.
   (lsp-headerline-breadcrumb-enable-diagnostics nil)    ;; Disable diagnostics in headerline.
@@ -660,7 +664,7 @@
   :hook
   (python-base-mode . (lambda () (require 'lsp-pyright)))
   :custom
-  (lsp-pyright-langserver-command "basedpyright-langserver")
+  (lsp-pyright-langserver-command "basedpyright")
   (lsp-pyright-typechecking-mode "basic"))
 
 
@@ -688,10 +692,9 @@
   :straight t
   :ensure t
   :hook
-  (find-file . (lambda ()
-                 (global-diff-hl-mode)           ;; Enable Diff-HL mode for all files.
-                 (diff-hl-flydiff-mode)          ;; Automatically refresh diffs.
-                 (diff-hl-margin-mode)))         ;; Show diff indicators in the margin.
+  (after-init . global-diff-hl-mode)
+  (diff-hl-mode . diff-hl-flydiff-mode)
+  (diff-hl-mode . diff-hl-margin-mode)
   :custom
   (diff-hl-side 'left)                           ;; Set the side for diff indicators.
   (diff-hl-margin-symbols-alist '((insert . "┃") ;; Customize symbols for each change type.
@@ -760,6 +763,11 @@
   :ensure t
   :straight t
   :commands (eat eat-mode)
+  :config
+  (with-eval-after-load 'evil-collection
+    (evil-collection-define-key 'normal 'eat-mode-map
+      "p" #'eat-yank
+      "P" #'eat-yank))
   :defer t)
 
 
@@ -939,14 +947,14 @@
             (shell-command (concat "prettier --write " (shell-quote-argument (buffer-file-name))))
             (revert-buffer t t t))
 
-    "p b" 'consult-project-buffer
-    "p o" 'ek/project-switch-project-in-workspace
-    "p k" 'project-kill-buffers
-    "p n" 'tab-next
-    "p p" 'tab-previous
-    "p c" 'tab-bar-new-tab
-    "p x" 'tab-bar-close-tab
-    "p r" 'tab-bar-rename-tab
+    "j b" 'consult-project-buffer
+    "j o" 'ek/project-switch-project-in-workspace
+    "j k" 'project-kill-buffers
+    "j n" 'tab-next
+    "j p" 'tab-previous
+    "j c" 'tab-bar-new-tab
+    "j x" 'tab-bar-close-tab
+    "j r" 'tab-bar-rename-tab
 
     "s f" 'consult-find
     "s g" 'consult-grep
@@ -1026,6 +1034,7 @@
   :init
   (setq undo-tree-visualizer-timestamps t
         undo-tree-visualizer-diff t
+        undo-tree-auto-save-history nil
         ;; Increase undo limits to avoid losing history due to Emacs' garbage collection.
         ;; These values can be adjusted based on your needs.
         ;; 10X bump of the undo limits to avoid issues with premature
@@ -1088,13 +1097,17 @@
   :defer t
   :custom
   (doom-modeline-buffer-file-name-style 'buffer-name)  ;; Set the buffer file name style to just the buffer name (without path).
-  (doom-modeline-project-detection 'project)           ;; Enable project detection for displaying the project name.
+  (doom-modeline-project-detection nil)                ;; Avoid project resolution on every file open.
   (doom-modeline-buffer-name t)                        ;; Show the buffer name in the mode line.
   (doom-modeline-vcs-max-length 25)                    ;; Limit the version control system (VCS) branch name length to 25 characters.
   :config
   (if ek-use-nerd-fonts                                ;; Check if nerd fonts are being used.
       (setq doom-modeline-icon t)                      ;; Enable icons in the mode line if nerd fonts are used.
     (setq doom-modeline-icon nil))                     ;; Disable icons if nerd fonts are not being used.
+  (remove-hook 'find-file-hook #'doom-modeline-update-vcs)
+  (remove-hook 'after-save-hook #'doom-modeline-update-vcs)
+  (when (advice-member-p #'doom-modeline-update-vcs #'vc-refresh-state)
+    (advice-remove #'vc-refresh-state #'doom-modeline-update-vcs))
   :hook
   (after-init . doom-modeline-mode))
 
