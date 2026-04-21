@@ -92,16 +92,29 @@
           (string-match-p "\\`\\*ai-code-.*\\*\\'" name)
           (string-match-p "\\`ai-code-mcp-http-server <.*>\\'" name))))
 
+  (defun ek-magit-buffer-p (buffer-or-name)
+    "Return non-nil when BUFFER-OR-NAME is a Magit buffer."
+    (let ((buffer (if (bufferp buffer-or-name)
+                      buffer-or-name
+                    (get-buffer buffer-or-name))))
+      (and buffer
+           (with-current-buffer buffer
+             (derived-mode-p 'magit-mode 'magit-process-mode)))))
+
   (defun skip-these-buffers (_window buffer _bury-or-kill)
     "Function for `switch-to-prev-buffer-skip'."
     (or (string-match "\\*[^*]+\\*" (buffer-name buffer))
-        (ek-ai-code-buffer-p buffer)))
+        (ek-ai-code-buffer-p buffer)
+        (ek-magit-buffer-p buffer)))
   (setq switch-to-prev-buffer-skip 'skip-these-buffers)
   (with-eval-after-load 'consult
     (dolist (regexp '("\\`\\*.*\\[.*\\].*\\*\\'"
                       "\\`\\*[Aa][Ii] Code.*\\*\\'"
                       "\\`\\*ai-code-.*\\*\\'"
-                      "\\`ai-code-mcp-http-server <.*>\\'"))
+                      "\\`ai-code-mcp-http-server <.*>\\'"
+                      "\\`magit\\(?::.*\\)?\\'"
+                      "\\`\\*magit.*\\*\\'"
+                      "\\`\\*.*magit.*\\*\\'"))
       (add-to-list 'consult-buffer-filter regexp)))
 
 
@@ -183,6 +196,38 @@
   (interactive)
   (split-window-right)
   (other-window 1))
+
+(defconst ek/window-resize-step 5
+  "Number of columns/lines to resize windows by per command.")
+
+(defun ek/window-resize-left ()
+  "Shrink the current window horizontally."
+  (interactive)
+  (shrink-window-horizontally ek/window-resize-step))
+
+(defun ek/window-resize-right ()
+  "Enlarge the current window horizontally."
+  (interactive)
+  (enlarge-window-horizontally ek/window-resize-step))
+
+(defun ek/window-resize-down ()
+  "Shrink the current window vertically."
+  (interactive)
+  (shrink-window ek/window-resize-step))
+
+(defun ek/window-resize-up ()
+  "Enlarge the current window vertically."
+  (interactive)
+  (enlarge-window ek/window-resize-step))
+
+(defun ek/ai-code-window-width-columns ()
+  "Return the desired AI side-window width in columns."
+  (max 40 (floor (* (frame-width) 0.45))))
+
+(defun ek/update-ai-code-window-width (&rest _)
+  "Keep the AI side-window width at two-fifths of the current frame."
+  (setq ai-code-backends-infra-window-width
+        (ek/ai-code-window-width-columns)))
 
 (defun ek/tab-name-for-project-root (root)
   "Return a human-friendly tab name for project ROOT."
@@ -372,7 +417,32 @@
 ;;; ORG-MODE
 (use-package org
   :ensure nil     ;; This is built-in, no need to fetch it.
-  :defer t)       ;; Defer loading Org-mode until it's needed.
+  :defer t
+  :custom
+  (org-directory (expand-file-name "~/Documents/org/"))
+  (org-agenda-files
+   (mapcar #'expand-file-name
+           '("~/Documents/org/inbox.org"
+             "~/Documents/org/tasks.org"
+             "~/Documents/org/todo.org")))
+  :config
+  (setq-default fill-column 80))
+
+(use-package org-modern
+  :ensure t
+  :straight t
+  :after org
+  :hook
+  (org-mode . org-modern-mode))
+
+(use-package org-roam
+  :ensure t
+  :straight t
+  :defer t
+  :init
+  (setq org-roam-directory (file-truename "~/Documents/org/roam"))
+  :config
+  (org-roam-db-autosync-mode 1))
 
 
 ;;; WHICH-KEY
@@ -685,13 +755,24 @@
   :defer t)
 
 
+;;; EAT
+(use-package eat
+  :ensure t
+  :straight t
+  :commands (eat eat-mode)
+  :defer t)
+
+
 ;;; AI CODE
 (use-package ai-code
   :ensure t
   :straight t
   :defer t
   :config
-  (setq ai-code-backends-infra-terminal-backend 'vterm)
+  (setq ai-code-backends-infra-window-side 'right)
+  (ek/update-ai-code-window-width)
+  (add-hook 'window-size-change-functions #'ek/update-ai-code-window-width)
+  (setq ai-code-backends-infra-terminal-backend 'eat)
   (ai-code-set-backend 'codex)
   (setq ai-code-auto-test-type 'ask-me)
   (ai-code-prompt-filepath-completion-mode 1))
@@ -838,6 +919,10 @@
     "e e" 'neotree-toggle
     "e d" 'dired-jump
 
+    "o a" 'org-agenda
+    "o f" 'org-roam-node-find
+    "o i" 'org-roam-node-insert
+
     "g g" 'magit-status
     "g l" 'magit-log-current
     "g d" 'magit-diff-buffer-file
@@ -877,6 +962,10 @@
     "w j" 'windmove-down
     "w k" 'windmove-up
     "w l" 'windmove-right
+    "w H" 'ek/window-resize-left
+    "w J" 'ek/window-resize-down
+    "w K" 'ek/window-resize-up
+    "w L" 'ek/window-resize-right
     "w s" 'ek/split-window-below-and-focus
     "w v" 'ek/split-window-right-and-focus
     "w d" 'delete-window
@@ -887,7 +976,8 @@
     "x x" 'consult-flymake
     "x d" 'dired
     "x j" 'dired-jump
-    "x f" 'find-file)
+
+    "f f" 'find-file)
 
   (ek/leader
     :keymaps 'lsp-mode-map
