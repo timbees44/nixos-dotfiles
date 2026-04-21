@@ -41,7 +41,6 @@ fi
 alias vi='nvim'
 alias vim='nvim'
 alias ll='ls -la'
-alias c='opencode'
 
 n() {
   if [ "$#" -eq 0 ]; then
