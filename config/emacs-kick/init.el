@@ -231,6 +231,11 @@
   (setq ai-code-backends-infra-window-width
         (ek/ai-code-window-width-columns)))
 
+(defun ek/current-workspace-name ()
+  "Return the current tab/workspace name."
+  (or (alist-get 'name (tab-bar--current-tab))
+      "Home"))
+
 (defun ek/tab-name-for-project-root (root)
   "Return a human-friendly tab name for project ROOT."
   (file-name-nondirectory (directory-file-name root)))
@@ -267,6 +272,24 @@
         (project-remember-project project)))
     (ek/switch-or-create-project-workspace dir)))
 
+(defun ek/magit-kill-repo-buffers ()
+  "Kill Magit buffers that belong to the current repository."
+  (interactive)
+  (require 'magit)
+  (let* ((topdir (magit-toplevel))
+         (killed 0))
+    (unless topdir
+      (user-error "Not inside a Git repository"))
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (when (and (derived-mode-p 'magit-mode 'magit-process-mode)
+                   (equal (ignore-errors (magit-toplevel)) topdir))
+          (setq killed (1+ killed))
+          (kill-buffer buffer))))
+    (message "Killed %d Magit buffer%s"
+             killed
+             (if (= killed 1) "" "s"))))
+
 (use-package tab-bar
   :ensure nil
   :custom
@@ -276,6 +299,32 @@
   (tab-bar-show 0)
   :init
   (tab-bar-mode 1))
+
+(use-package tabspaces
+  :ensure t
+  :straight t
+  :after (tab-bar project)
+  :hook
+  (after-init . tabspaces-mode)
+  :custom
+  (tabspaces-use-filtered-buffers-as-default t)
+  (tabspaces-default-tab "Home")
+  (tabspaces-remove-to-default t)
+  (tabspaces-include-buffers '("*scratch*"))
+  :config
+  (with-eval-after-load 'consult
+    (defun ek/tabspaces-consult-setup ()
+      "Limit `consult-buffer' to buffers in the current tabspace."
+      (cond
+       (tabspaces-mode
+        (consult-customize consult--source-buffer :hidden t :default nil)
+        (add-to-list 'consult-buffer-sources 'consult--source-workspace))
+       (t
+        (consult-customize consult--source-buffer :hidden nil :default t)
+        (setq consult-buffer-sources
+              (remove #'consult--source-workspace consult-buffer-sources)))))
+    (add-hook 'tabspaces-mode-hook #'ek/tabspaces-consult-setup)
+    (ek/tabspaces-consult-setup)))
 
 (use-package window
   :ensure nil       ;; This is built-in, no need to fetch it.
@@ -749,10 +798,14 @@
   :straight t
   :commands (vterm vterm-mode)
   :init
-  (defvar ek/vterm-popup-buffer-name "*vterm-popup*"
-    "Buffer name used for the popup terminal.")
-  (defvar ek/vterm-full-buffer-name "*vterm*"
-    "Buffer name used for the full-size terminal.")
+  (defvar ek/vterm-popup-buffer-base-name "vterm-popup"
+    "Base buffer name used for popup terminals.")
+  (defvar ek/vterm-full-buffer-base-name "vterm"
+    "Base buffer name used for full-size terminals.")
+
+  (defun ek/vterm-buffer-name (base-name)
+    "Return a tab-local vterm buffer name for BASE-NAME."
+    (format "*%s:%s*" base-name (ek/current-workspace-name)))
 
   (defun ek/vterm--get-or-create-buffer (buffer-name)
     "Return a live vterm buffer named BUFFER-NAME, creating it if needed."
@@ -766,7 +819,8 @@
   (defun ek/vterm-toggle-popup ()
     "Toggle a popup vterm in a bottom side window."
     (interactive)
-    (let* ((buffer (ek/vterm--get-or-create-buffer ek/vterm-popup-buffer-name))
+    (let* ((buffer-name (ek/vterm-buffer-name ek/vterm-popup-buffer-base-name))
+           (buffer (ek/vterm--get-or-create-buffer buffer-name))
            (window (get-buffer-window buffer t)))
       (if (window-live-p window)
           (delete-window window)
@@ -781,7 +835,8 @@
   (defun ek/vterm-open-full ()
     "Open a dedicated vterm buffer and make it fill the current frame."
     (interactive)
-    (let ((buffer (ek/vterm--get-or-create-buffer ek/vterm-full-buffer-name)))
+    (let* ((buffer-name (ek/vterm-buffer-name ek/vterm-full-buffer-base-name))
+           (buffer (ek/vterm--get-or-create-buffer buffer-name)))
       (switch-to-buffer buffer)
       (delete-other-windows)))
   :defer t)
@@ -965,6 +1020,7 @@
     "g d" 'magit-diff-buffer-file
     "g D" 'diff-hl-show-hunk
     "g b" 'vc-annotate
+    "g k" 'ek/magit-kill-repo-buffers
 
     "h m" 'describe-mode
     "h f" 'describe-function
