@@ -166,6 +166,8 @@
 
   ;; Set the default coding system for files to UTF-8.
   (modify-coding-system-alist 'file "" 'utf-8)
+  (setq vc-handled-backends '(Git))
+  (remove-hook 'find-file-hook #'vc-refresh-state)
 
   ;; Add a hook to run code after Emacs has fully initialized.
   (add-hook 'after-init-hook
@@ -550,7 +552,10 @@
   (treesit-auto-install 'prompt)
   :config
   (treesit-auto-add-to-auto-mode-alist 'all)
-  (global-treesit-auto-mode t))
+  ;; Avoid per-file `set-auto-mode' advice. Build the remap table once from
+  ;; the grammars already available on this machine instead.
+  (setq major-mode-remap-alist
+        (treesit-auto--build-major-mode-remap-alist)))
 
 
 ;;; MARKDOWN-MODE
@@ -1195,11 +1200,11 @@
    `(diff-hl-insert ((t (:background unspecified :foreground ,(catppuccin-get-color 'green))))))
   :defer t)
 
-(use-package gruvbox-theme
+(use-package doom-themes
   :ensure t
   :straight t
   :config
-  (load-theme 'gruvbox-dark-medium :no-confirm))
+  (load-theme 'doom-gruvbox :no-confirm))
 
 
 ;;; UTILITARY FUNCTION TO INSTALL EMACS-KICK
