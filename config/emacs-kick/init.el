@@ -562,6 +562,30 @@
   :init (setq markdown-command "multimarkdown")) ;; Set the Markdown processing command.
 
 
+;;; NIX-MODE
+(use-package nix-mode
+  :ensure t
+  :straight t
+  :defer t
+  :mode ("\\.nix\\'" . nix-mode))
+
+
+;;; PDF-TOOLS
+(use-package pdf-tools
+  :ensure t
+  :straight t
+  :defer t
+  :mode ("\\.[Pp][Dd][Ff]\\'" . pdf-view-mode)
+  :magic ("%PDF" . pdf-view-mode)
+  :init
+  (when-let ((epdfinfo (executable-find "epdfinfo")))
+    (setq pdf-info-epdfinfo-program epdfinfo))
+  :config
+  (pdf-tools-install-noverify)
+  (setq-default pdf-view-display-size 'fit-page)
+  (setq pdf-annot-activate-created-annotations t))
+
+
 ;;; CORFU
 (use-package corfu
   :ensure t

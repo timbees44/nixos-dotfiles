@@ -211,18 +211,18 @@ in {
         record:
           enabled: true
           retain:
-            days: 0
+            days: 7
           alerts:
             pre_capture: 2
             post_capture: 3
             retain:
-              days: 5
+              days: 14
               mode: active_objects
           detections:
             pre_capture: 2
             post_capture: 3
             retain:
-              days: 5
+              days: 14
               mode: active_objects
 
         review:
@@ -258,7 +258,7 @@ in {
           reolink_poe:
             ffmpeg:
               inputs:
-                - path: rtsp://127.0.0.1:8554/reolink_main
+                - path: rtsp://127.0.0.1:8554/reolink_sub
                   input_args: preset-rtsp-restream
                   roles:
                     - detect

@@ -32,6 +32,7 @@ in
     btop
     codex
     emacs
+    emacsPackages.pdf-tools
     eza
     fd
     fzf

@@ -44,6 +44,7 @@ in
     discord
     element-desktop
     emacs
+    emacsPackages.pdf-tools
     eza
     fd
     foot

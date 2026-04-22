@@ -54,6 +54,14 @@ in
     enable = true;
     package = pkgs.mullvad-vpn;
   };
+  services.syncthing = {
+    enable = true;
+    user = primaryUser;
+    dataDir = "${linuxHome}/syncthing";
+    configDir = "${linuxHome}/.config/syncthing";
+    guiAddress = "127.0.0.1:8384";
+    openDefaultPorts = true;
+  };
   services.pipewire = {
     enable = true;
     alsa.enable = true;

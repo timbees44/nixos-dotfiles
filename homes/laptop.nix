@@ -42,6 +42,7 @@ in
     codex
 		deluge
     emacs
+    emacsPackages.pdf-tools
     eza
     fd
     fzf
