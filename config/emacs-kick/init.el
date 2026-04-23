@@ -56,11 +56,12 @@
   (delete-selection-mode 1)                       ;; Enable replacing selected text with typed text.
   (display-line-numbers-type 'relative)           ;; Use relative line numbering in programming modes.
   (global-auto-revert-non-file-buffers t)         ;; Automatically refresh non-file buffers.
-  (history-length 25)                             ;; Set the length of the command history.
+  (help-window-select t)                          ;; Jump into newly opened Help buffers automatically.
+  (history-length 100)                             ;; Set the length of the command history.
   (indent-tabs-mode nil)                          ;; Disable the use of tabs for indentation (use spaces instead).
   (inhibit-startup-message t)                     ;; Disable the startup message when Emacs launches.
   (initial-scratch-message "")                    ;; Clear the initial message in the *scratch* buffer.
-  (ispell-dictionary "en_US")                     ;; Set the default dictionary for spell checking.
+  (ispell-dictionary "en_GB")                     ;; Set the default dictionary for spell checking.
   (make-backup-files nil)                         ;; Disable creation of backup files.
   (pixel-scroll-precision-mode t)                 ;; Enable precise pixel scrolling.
   (pixel-scroll-precision-use-momentum nil)       ;; Disable momentum scrolling for pixel precision.
@@ -70,7 +71,7 @@
   (tab-always-indent 'complete)                   ;; Make the TAB key complete text instead of just indenting.
   (tab-width 4)                                   ;; Set the tab width to 4 spaces.
   (treesit-font-lock-level 4)                     ;; Use advanced font locking for Treesit mode.
-  (truncate-lines t)                              ;; Enable line truncation to avoid wrapping long lines.
+  ;;(truncate-lines t)                              ;; Enable line truncation to avoid wrapping long lines.
   (use-dialog-box nil)                            ;; Disable dialog boxes in favor of minibuffer prompts.
   (use-short-answers t)                           ;; Use short answers in prompts for quicker responses (y instead of yes)
   (warning-minimum-level :emergency)              ;; Set the minimum level of warnings to display.
@@ -132,7 +133,7 @@
           ns-command-modifier 'meta
           ns-option-key-is-meta nil
           ns-option-modifier 'none)  ;; Set the Command key to act as the Meta key.
-    (set-face-attribute 'default nil :family "JetBrainsMono Nerd Font" :height 180))
+    (set-face-attribute 'default nil :family "JetBrainsMono Nerd Font" :height 170))
 
   ;; Save manual customizations to a separate file instead of cluttering `init.el'.
   ;; You can M-x customize, M-x customize-group, or M-x customize-themes, etc.
@@ -171,19 +172,19 @@
 
   ;; Add a hook to run code after Emacs has fully initialized.
   (add-hook 'after-init-hook
-            (lambda ()
-              (message "Emacs has fully loaded. This code runs after startup.")
+    (lambda ()
+        (message "Emacs has fully loaded. This code runs after startup.")
 
-              ;; Insert a welcome message in the *scratch* buffer displaying loading time and activated packages.
-              (with-current-buffer (get-buffer-create "*scratch*")
-                (insert (format
-                         ";;    Welcome to Emacs!
-;;
-;;    Loading time : %s
-;;    Packages     : %s
-"
-                         (emacs-init-time)
-                         (length (hash-table-keys straight--recipe-cache))))))))
+        ;; Insert a welcome message in the *scratch* buffer displaying loading time and activated packages.
+        (with-current-buffer (get-buffer-create "*scratch*")
+        (insert (format
+                    ";;    Welcome to Emacs!
+                    ;;
+                    ;;    Loading time : %s
+                    ;;    Packages     : %s
+                    "
+                    (emacs-init-time)
+                    (length (hash-table-keys straight--recipe-cache))))))))
 
 
 ;;; WINDOW
@@ -231,46 +232,32 @@
   (setq ai-code-backends-infra-window-width
         (ek/ai-code-window-width-columns)))
 
-(defun ek/current-workspace-name ()
-  "Return the current tab/workspace name."
-  (or (alist-get 'name (tab-bar--current-tab))
-      "Home"))
+(defun ek/ai-code-toggle ()
+  "Toggle visibility of the AI Code session window."
+  (interactive)
+  (let (session-window)
+    (dolist (window (window-list nil 'no-minibuffer))
+      (when (and (fboundp 'ai-code-backends-infra--session-buffer-p)
+                 (ai-code-backends-infra--session-buffer-p
+                  (window-buffer window)))
+        (setq session-window window)))
+    (cond
+     ((and (fboundp 'ai-code-backends-infra--session-buffer-p)
+           (ai-code-backends-infra--session-buffer-p (current-buffer)))
+      (quit-window))
+     ((window-live-p session-window)
+      (delete-window session-window))
+     (t
+      (ai-code-cli-switch-to-buffer)))))
 
-(defun ek/tab-name-for-project-root (root)
-  "Return a human-friendly tab name for project ROOT."
-  (file-name-nondirectory (directory-file-name root)))
-
-(defun ek/tab-index-by-name (name)
-  "Return the 1-based tab index for tab NAME, or nil when absent."
-  (let ((index 1)
-        match)
-    (dolist (tab (tab-bar-tabs))
-      (when (equal (alist-get 'name tab) name)
-        (setq match index))
-      (setq index (1+ index)))
-    match))
-
-(defun ek/switch-or-create-project-workspace (dir)
-  "Switch to or create a tab workspace for project DIR."
-  (interactive "DProject directory: ")
-  (let* ((root (file-name-as-directory (expand-file-name dir)))
-         (tab-name (ek/tab-name-for-project-root root))
-         (existing (ek/tab-index-by-name tab-name)))
-    (if existing
-        (tab-bar-select-tab existing)
-      (tab-bar-new-tab)
-      (tab-bar-rename-tab tab-name))
-    (let ((default-directory root))
-      (dired root))))
-
-(defun ek/project-switch-project-in-workspace ()
-  "Open the selected project in its own tab workspace."
+(defun ek/project-open-root-dired ()
+  "Open the selected project root in Dired."
   (interactive)
   (let ((dir (project-prompt-project-dir)))
     (let ((default-directory dir))
       (when-let ((project (project-current nil)))
         (project-remember-project project)))
-    (ek/switch-or-create-project-workspace dir)))
+    (dired (file-name-as-directory (expand-file-name dir)))))
 
 (defun ek/magit-kill-repo-buffers ()
   "Kill Magit buffers that belong to the current repository."
@@ -290,53 +277,11 @@
              killed
              (if (= killed 1) "" "s"))))
 
-(use-package tab-bar
-  :ensure nil
-  :custom
-  (tab-bar-close-button-show nil)
-  (tab-bar-new-button-show nil)
-  (tab-bar-tab-hints t)
-  (tab-bar-show 0)
-  :init
-  (tab-bar-mode 1))
-
-(use-package tabspaces
-  :ensure t
-  :straight t
-  :after (tab-bar project)
-  :hook
-  (after-init . tabspaces-mode)
-  :custom
-  (tabspaces-use-filtered-buffers-as-default t)
-  (tabspaces-default-tab "Home")
-  (tabspaces-remove-to-default t)
-  (tabspaces-include-buffers '("*scratch*"))
-  :config
-  (with-eval-after-load 'consult
-    (defun ek/tabspaces-consult-setup ()
-      "Limit `consult-buffer' to buffers in the current tabspace."
-      (cond
-       (tabspaces-mode
-        (consult-customize consult--source-buffer :hidden t :default nil)
-        (add-to-list 'consult-buffer-sources 'consult--source-workspace))
-       (t
-        (consult-customize consult--source-buffer :hidden nil :default t)
-        (setq consult-buffer-sources
-              (remove #'consult--source-workspace consult-buffer-sources)))))
-    (add-hook 'tabspaces-mode-hook #'ek/tabspaces-consult-setup)
-    (ek/tabspaces-consult-setup)))
-
 (use-package window
   :ensure nil       ;; This is built-in, no need to fetch it.
   :custom
   (display-buffer-alist
    '(
-     ;; ("\\*.*e?shell\\*"
-     ;;  (display-buffer-in-side-window)
-     ;;  (window-height . 0.25)
-     ;;  (side . bottom)
-     ;;  (slot . -1))
-
      ("\\*\\(Backtrace\\|Warnings\\|Compile-Log\\|[Hh]elp\\|Messages\\|Bookmark List\\|Ibuffer\\|Occur\\|eldoc.*\\)\\*"
       (display-buffer-in-side-window)
       (window-height . 0.25)
@@ -362,7 +307,6 @@
 
 
 ;;; DIRED
-
 (use-package dired
   :ensure nil                                                ;; This is built-in, no need to fetch it.
   :custom
@@ -607,13 +551,47 @@
         (treesit-auto--build-major-mode-remap-alist)))
 
 
-;;; MARKDOWN-MODE
+;;; FILETYPE MODES
 (use-package markdown-mode
   :defer t
   :straight t
   :ensure t
   :mode ("README\\.md\\'" . gfm-mode)            ;; Use gfm-mode for README.md files.
   :init (setq markdown-command "multimarkdown")) ;; Set the Markdown processing command.
+
+(use-package toml-mode
+  :ensure t
+  :straight t
+  :defer t
+  :mode ("\\.toml\\'" . toml-mode))
+
+(use-package yaml-mode
+  :ensure t
+  :straight t
+  :defer t
+  :mode ("\\.ya?ml\\'" . yaml-mode))
+
+(use-package dockerfile-mode
+  :ensure t
+  :straight t
+  :defer t
+  :mode (("Dockerfile\\'" . dockerfile-mode)
+         ("\\.dockerfile\\'" . dockerfile-mode)))
+
+(use-package just-mode
+  :ensure t
+  :straight t
+  :defer t
+  :mode (("justfile\\'" . just-mode)
+         ("\\.just\\'" . just-mode)))
+
+(use-package git-modes
+  :ensure t
+  :straight t
+  :defer t
+  :mode (("/\\.gitignore\\'" . gitignore-mode)
+         ("/\\.gitattributes\\'" . gitattributes-mode)
+         ("/\\.gitconfig\\'" . gitconfig-mode)))
 
 
 ;;; NIX-MODE
@@ -646,7 +624,7 @@
   :straight t
   :defer t
   :custom
-  (corfu-auto nil)                        ;; Only completes when hitting TAB
+  (corfu-auto nil)                       ;; Only completes when hitting TAB
   ;; (corfu-auto-delay 0)                ;; Delay before popup (enable if corfu-auto is t)
   (corfu-auto-prefix 1)                  ;; Trigger completion after typing 1 character
   (corfu-quit-no-match t)                ;; Quit popup if no match
@@ -798,14 +776,10 @@
   :straight t
   :commands (vterm vterm-mode)
   :init
-  (defvar ek/vterm-popup-buffer-base-name "vterm-popup"
-    "Base buffer name used for popup terminals.")
-  (defvar ek/vterm-full-buffer-base-name "vterm"
-    "Base buffer name used for full-size terminals.")
-
-  (defun ek/vterm-buffer-name (base-name)
-    "Return a tab-local vterm buffer name for BASE-NAME."
-    (format "*%s:%s*" base-name (ek/current-workspace-name)))
+  (defvar ek/vterm-popup-buffer-name "*vterm-popup*"
+    "Buffer name used for the popup terminal.")
+  (defvar ek/vterm-full-buffer-name "*vterm*"
+    "Buffer name used for the full-size terminal.")
 
   (defun ek/vterm--get-or-create-buffer (buffer-name)
     "Return a live vterm buffer named BUFFER-NAME, creating it if needed."
@@ -819,8 +793,7 @@
   (defun ek/vterm-toggle-popup ()
     "Toggle a popup vterm in a bottom side window."
     (interactive)
-    (let* ((buffer-name (ek/vterm-buffer-name ek/vterm-popup-buffer-base-name))
-           (buffer (ek/vterm--get-or-create-buffer buffer-name))
+    (let* ((buffer (ek/vterm--get-or-create-buffer ek/vterm-popup-buffer-name))
            (window (get-buffer-window buffer t)))
       (if (window-live-p window)
           (delete-window window)
@@ -835,8 +808,7 @@
   (defun ek/vterm-open-full ()
     "Open a dedicated vterm buffer and make it fill the current frame."
     (interactive)
-    (let* ((buffer-name (ek/vterm-buffer-name ek/vterm-full-buffer-base-name))
-           (buffer (ek/vterm--get-or-create-buffer buffer-name)))
+    (let ((buffer (ek/vterm--get-or-create-buffer ek/vterm-full-buffer-name)))
       (switch-to-buffer buffer)
       (delete-other-windows)))
   :defer t)
@@ -995,7 +967,7 @@
 
     "a a" 'ai-code-menu
     "a s" 'ai-code-cli-start
-    "a z" 'ai-code-cli-switch-to-buffer-or-hide
+    "a z" 'ek/ai-code-toggle
     "a q" 'ai-code-ask-question
     "a c" 'ai-code-code-change
     "a p" 'ai-code-open-prompt-file
@@ -1033,13 +1005,8 @@
             (revert-buffer t t t))
 
     "j b" 'consult-project-buffer
-    "j o" 'ek/project-switch-project-in-workspace
+    "j o" 'ek/project-open-root-dired
     "j k" 'project-kill-buffers
-    "j n" 'tab-next
-    "j p" 'tab-previous
-    "j c" 'tab-bar-new-tab
-    "j x" 'tab-bar-close-tab
-    "j r" 'tab-bar-rename-tab
 
     "s f" 'consult-find
     "s g" 'consult-grep
@@ -1059,6 +1026,7 @@
     "w J" 'ek/window-resize-down
     "w K" 'ek/window-resize-up
     "w L" 'ek/window-resize-right
+    "w m" 'delete-other-windows
     "w s" 'ek/split-window-below-and-focus
     "w v" 'ek/split-window-right-and-focus
     "w d" 'delete-window
