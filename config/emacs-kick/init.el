@@ -27,7 +27,7 @@
     (with-current-buffer
         (url-retrieve-synchronously
          "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
+        'silent 'inhibit-cookies)
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
@@ -257,7 +257,9 @@
     (let ((default-directory dir))
       (when-let ((project (project-current nil)))
         (project-remember-project project)))
-    (dired (file-name-as-directory (expand-file-name dir)))))
+    (switch-to-buffer
+     (dired-noselect (file-name-as-directory (expand-file-name dir))))
+    (delete-other-windows)))
 
 (defun ek/magit-kill-repo-buffers ()
   "Kill Magit buffers that belong to the current repository."
@@ -417,6 +419,8 @@
   :ensure nil     ;; This is built-in, no need to fetch it.
   :defer t
   :custom
+  (org-M-RET-may-split-line nil)
+  (org-agenda-window-setup 'current-window)
   (org-directory (expand-file-name "~/Documents/org/"))
   (org-agenda-files
    (mapcar #'expand-file-name
@@ -978,7 +982,7 @@
     "b b" 'ibuffer
     "b d" 'kill-current-buffer
     "b s" 'save-buffer
-    "b l" 'previous-buffer
+    "b l" 'mode-line-other-buffer
 
     "e e" 'neotree-toggle
     "e d" 'dired-jump
