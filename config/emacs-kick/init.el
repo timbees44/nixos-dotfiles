@@ -232,6 +232,11 @@
   (setq ai-code-backends-infra-window-width
         (ek/ai-code-window-width-columns)))
 
+(defconst ek/config-directory
+  (file-name-directory
+   (file-truename (or load-file-name user-init-file)))
+  "Directory containing the active Emacs-Kick init file.")
+
 (defun ek/ai-code-toggle ()
   "Toggle visibility of the AI Code session window."
   (interactive)
@@ -445,6 +450,62 @@
   (setq org-roam-directory (file-truename "~/Documents/org/roam"))
   :config
   (org-roam-db-autosync-mode 1))
+
+(use-package elfeed
+  :ensure t
+  :straight t
+  :defer t
+  :custom
+  (elfeed-db-directory "~/.elfeed")
+  (elfeed-enclosure-default-dir "~/Downloads/elfeed/")
+  (elfeed-search-filter "@1-month-ago")
+  (elfeed-use-curl t))
+
+(defun ek/elfeed-configured-feed-urls ()
+  "Return the configured Elfeed feed URLs from `elfeed-feeds'."
+  (mapcar (lambda (feed)
+            (if (listp feed) (car feed) feed))
+          elfeed-feeds))
+
+(defun ek/elfeed-prune-removed-feeds (&rest _)
+  "Remove database entries for feeds no longer present in `elfeed.org'."
+  (when (featurep 'elfeed-org)
+    (rmh-elfeed-org-process rmh-elfeed-org-files rmh-elfeed-org-tree-id))
+  (elfeed-db-load)
+  (let* ((configured-feeds (ek/elfeed-configured-feed-urls))
+         (configured-table (make-hash-table :test 'equal))
+         stale-entry-ids
+         stale-feed-ids)
+    (dolist (feed-url configured-feeds)
+      (puthash feed-url t configured-table))
+    (with-elfeed-db-visit (entry _feed)
+      (unless (gethash (elfeed-entry-feed-id entry) configured-table)
+        (push (elfeed-entry-id entry) stale-entry-ids)))
+    (maphash (lambda (feed-id _feed)
+               (unless (gethash feed-id configured-table)
+                 (push feed-id stale-feed-ids)))
+             elfeed-db-feeds)
+    (dolist (entry-id stale-entry-ids)
+      (avl-tree-delete elfeed-db-index entry-id)
+      (remhash entry-id elfeed-db-entries))
+    (dolist (feed-id stale-feed-ids)
+      (remhash feed-id elfeed-db-feeds))
+    (when (or stale-entry-ids stale-feed-ids)
+      (elfeed-db-gc)
+      (elfeed-db-save)
+      (message "Elfeed pruned %d stale entries across %d removed feeds"
+               (length stale-entry-ids)
+               (length stale-feed-ids)))))
+
+(use-package elfeed-org
+  :ensure t
+  :straight t
+  :after (elfeed org)
+  :config
+  (setq rmh-elfeed-org-files
+        (list (expand-file-name "elfeed.org" ek/config-directory)))
+  (elfeed-org)
+  (advice-add #'elfeed :before #'ek/elfeed-prune-removed-feeds))
 
 
 ;;; WHICH-KEY
@@ -988,6 +1049,7 @@
     "e d" 'dired-jump
 
     "o a" 'org-agenda
+    "o e" 'elfeed
     "o f" 'org-roam-node-find
     "o i" 'org-roam-node-insert
 
