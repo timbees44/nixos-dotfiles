@@ -621,7 +621,8 @@
   :defer t
   :straight t
   :ensure t
-  :mode ("README\\.md\\'" . gfm-mode)            ;; Use gfm-mode for README.md files.
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode))
   :init (setq markdown-command "multimarkdown")) ;; Set the Markdown processing command.
 
 (use-package toml-mode
