@@ -842,24 +842,60 @@
   :straight t
   :commands (vterm vterm-mode)
   :init
-  (defvar ek/vterm-popup-buffer-name "*vterm-popup*"
-    "Buffer name used for the popup terminal.")
-  (defvar ek/vterm-full-buffer-name "*vterm*"
-    "Buffer name used for the full-size terminal.")
+  (defun ek/vterm-project-root ()
+    "Return the current project root, or `default-directory' when not in a project."
+    (if-let ((project (project-current nil)))
+        (expand-file-name (project-root project))
+      (expand-file-name default-directory)))
 
-  (defun ek/vterm--get-or-create-buffer (buffer-name)
-    "Return a live vterm buffer named BUFFER-NAME, creating it if needed."
+  (defun ek/vterm-buffer-name ()
+    "Return the shared vterm buffer name for the current project."
+    (format "*vterm:%s*"
+            (abbreviate-file-name
+             (directory-file-name (ek/vterm-project-root)))))
+
+  (defvar ek/vterm-neutral-base-name "*vterm-neutral*"
+    "Base buffer name used for neutral full-frame terminals.")
+
+  (defun ek/vterm-neutral-buffers ()
+    "Return live neutral vterm buffers in stable name order."
+    (sort
+     (seq-filter
+      #'buffer-live-p
+      (seq-filter
+       (lambda (buffer)
+         (string-match-p "\\`\\*vterm-neutral\\*\\(?:<[0-9]+>\\)?\\'"
+                         (buffer-name buffer)))
+       (buffer-list)))
+     (lambda (a b)
+       (string-lessp (buffer-name a) (buffer-name b)))))
+
+  (defun ek/vterm--buffer-index (buffer buffers)
+    "Return BUFFER index within BUFFERS, or nil when absent."
+    (let ((index 0)
+          match)
+      (dolist (item buffers)
+        (when (eq item buffer)
+          (setq match index))
+        (setq index (1+ index)))
+      match))
+
+  (defun ek/vterm--get-or-create-buffer (buffer-name working-dir)
+    "Return a live vterm buffer named BUFFER-NAME for WORKING-DIR, creating it if needed."
     (or (when-let ((buffer (get-buffer buffer-name)))
           (when (buffer-live-p buffer)
             buffer))
         (save-window-excursion
-          (vterm buffer-name)
+          (let ((default-directory working-dir))
+            (vterm buffer-name))
           (current-buffer))))
 
   (defun ek/vterm-toggle-popup ()
     "Toggle a popup vterm in a bottom side window."
     (interactive)
-    (let* ((buffer (ek/vterm--get-or-create-buffer ek/vterm-popup-buffer-name))
+    (let* ((working-dir (ek/vterm-project-root))
+           (buffer-name (ek/vterm-buffer-name))
+           (buffer (ek/vterm--get-or-create-buffer buffer-name working-dir))
            (window (get-buffer-window buffer t)))
       (if (window-live-p window)
           (delete-window window)
@@ -874,9 +910,49 @@
   (defun ek/vterm-open-full ()
     "Open a dedicated vterm buffer and make it fill the current frame."
     (interactive)
-    (let ((buffer (ek/vterm--get-or-create-buffer ek/vterm-full-buffer-name)))
+    (let* ((working-dir (ek/vterm-project-root))
+           (buffer-name (ek/vterm-buffer-name))
+           (buffer (ek/vterm--get-or-create-buffer buffer-name working-dir)))
       (switch-to-buffer buffer)
       (delete-other-windows)))
+
+  (defun ek/vterm-open-neutral ()
+    "Open the primary neutral vterm buffer full-frame."
+    (interactive)
+    (let ((buffer (ek/vterm--get-or-create-buffer
+                   ek/vterm-neutral-base-name
+                   (expand-file-name "~"))))
+      (switch-to-buffer buffer)
+      (delete-other-windows)))
+
+  (defun ek/vterm-new-neutral ()
+    "Create a new neutral vterm buffer and show it full-frame."
+    (interactive)
+    (let ((default-directory (expand-file-name "~")))
+      (vterm (generate-new-buffer-name ek/vterm-neutral-base-name))
+      (delete-other-windows)))
+
+  (defun ek/vterm-cycle-neutral-next ()
+    "Switch to the next neutral vterm buffer."
+    (interactive)
+    (let* ((buffers (ek/vterm-neutral-buffers))
+           (current (current-buffer)))
+      (unless buffers
+        (user-error "No neutral terminals"))
+      (if-let ((index (ek/vterm--buffer-index current buffers)))
+          (switch-to-buffer (nth (mod (1+ index) (length buffers)) buffers))
+        (switch-to-buffer (car buffers)))))
+
+  (defun ek/vterm-cycle-neutral-previous ()
+    "Switch to the previous neutral vterm buffer."
+    (interactive)
+    (let* ((buffers (ek/vterm-neutral-buffers))
+           (current (current-buffer)))
+      (unless buffers
+        (user-error "No neutral terminals"))
+      (if-let ((index (ek/vterm--buffer-index current buffers)))
+          (switch-to-buffer (nth (mod (1- index) (length buffers)) buffers))
+        (switch-to-buffer (car buffers)))))
   :defer t)
 
 
@@ -969,14 +1045,15 @@
   (evil-define-key 'normal 'global (kbd "] c") 'diff-hl-next-hunk) ;; Next diff hunk
   (evil-define-key 'normal 'global (kbd "[ c") 'diff-hl-previous-hunk) ;; Previous diff hunk
 
+  (defun ek/evil-yank-to-eol ()
+    "Yank from point to end of line."
+    (interactive)
+    (evil-yank (point) (line-end-position) 'exclusive ?\" nil))
+
+  (evil-define-key 'normal 'global (kbd "Y") 'ek/evil-yank-to-eol)
+
   ;; Yank from kill ring
   (evil-define-key 'normal 'global (kbd "P") 'consult-yank-from-kill-ring)
-
-  ;; LSP commands keybindings
-  (evil-define-key 'normal lsp-mode-map
-                   ;; (kbd "gd") 'lsp-find-definition                ;; evil-collection already provides gd
-                   (kbd "gr") 'lsp-find-references                   ;; Finds LSP references
-                   (kbd "gI") 'lsp-find-implementation)              ;; Find implementation
 
 
   (defun ek/lsp-describe-and-jump ()
@@ -1007,6 +1084,12 @@
                      (interactive)
                      (if (use-region-p)
                          (comment-or-uncomment-region (region-beginning) (region-end)))))
+
+  ;; LSP commands keybindings
+  (evil-define-key 'normal lsp-mode-map
+                   ;; (kbd "gd") 'lsp-find-definition                ;; evil-collection already provides gd
+                   (kbd "gr") 'lsp-find-references                   ;; Finds LSP references
+                   (kbd "gI") 'lsp-find-implementation)              ;; Find implementation
 
   ;; Enable evil mode
   (evil-mode 1))
@@ -1083,6 +1166,10 @@
 
     "t t" 'ek/vterm-toggle-popup
     "t T" 'ek/vterm-open-full
+    "t j" 'ek/vterm-open-neutral
+    "t J" 'ek/vterm-new-neutral
+    "t n" 'ek/vterm-cycle-neutral-next
+    "t p" 'ek/vterm-cycle-neutral-previous
 
     "w w" 'other-window
     "w h" 'windmove-left
@@ -1202,6 +1289,7 @@
   (add-to-list 'pulsar-pulse-functions 'flymake-goto-next-error)
   (add-to-list 'pulsar-pulse-functions 'flymake-goto-prev-error)
   (add-to-list 'pulsar-pulse-functions 'evil-yank)
+  (add-to-list 'pulsar-pulse-functions 'ek/evil-yank-to-eol)
   (add-to-list 'pulsar-pulse-functions 'evil-yank-line)
   (add-to-list 'pulsar-pulse-functions 'evil-delete)
   (add-to-list 'pulsar-pulse-functions 'evil-delete-line)
