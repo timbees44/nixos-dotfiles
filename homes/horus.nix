@@ -60,6 +60,7 @@ in
     nitch
     nixpkgs-fmt
     pcmanfm
+    python3
     ripgrep
     ruff
     starship
