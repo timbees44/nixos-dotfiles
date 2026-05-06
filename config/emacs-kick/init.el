@@ -476,6 +476,9 @@
          (configured-table (make-hash-table :test 'equal))
          stale-entry-ids
          stale-feed-ids)
+    (when (null configured-feeds)
+      (message "Elfeed prune skipped: no feeds loaded from elfeed.org")
+      (cl-return-from ek/elfeed-prune-removed-feeds nil))
     (dolist (feed-url configured-feeds)
       (puthash feed-url t configured-table))
     (with-elfeed-db-visit (entry _feed)
