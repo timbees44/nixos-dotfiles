@@ -78,7 +78,6 @@ brew_install_cask_if_missing() {
 }
 
 CORE_FORMULAE=(
-  bash
   bat
   btop
   cmake
@@ -130,8 +129,6 @@ fi
 echo "Linking shared config..."
 mkdir -p "$HOME/.config" "$HOME/.emacs.d" "$HOME/pictures/walls"
 
-link_path "${CONFIG_DIR}/bash/.bashrc" "$HOME/.bashrc"
-link_path "${CONFIG_DIR}/bash/.bash_profile" "$HOME/.bash_profile"
 link_path "${CONFIG_DIR}/zsh/.zshrc" "$HOME/.zshrc"
 link_path "${CONFIG_DIR}/zsh/.zprofile" "$HOME/.zprofile"
 

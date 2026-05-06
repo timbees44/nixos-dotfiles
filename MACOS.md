@@ -34,8 +34,6 @@ If you also want the optional macOS UI config and wallpaper:
 
 - `~/.zshrc`
 - `~/.zprofile`
-- `~/.bashrc`
-- `~/.bash_profile`
 - `~/.config/emacs`
 - `~/.config/nvim`
 - `~/.config/starship`
