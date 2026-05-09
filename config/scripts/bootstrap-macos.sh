@@ -82,6 +82,7 @@ CORE_FORMULAE=(
   btop
   cmake
   coreutils
+  direnv
   eza
   fd
   fzf
