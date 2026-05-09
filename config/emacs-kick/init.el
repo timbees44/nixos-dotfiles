@@ -51,6 +51,7 @@
   :custom                                         ;; Set custom variables to configure Emacs behavior.
   (auto-save-default nil)                         ;; Disable automatic saving of buffers.
   (column-number-mode t)                          ;; Display the column number in the mode line.
+  (confirm-kill-processes nil)                    ;; Do not ask for confirmation when killing terminal/process buffers.
   (create-lockfiles nil)                          ;; Prevent the creation of lock files when editing.
   (delete-by-moving-to-trash t)                   ;; Move deleted files to the trash instead of permanently deleting them.
   (delete-selection-mode 1)                       ;; Enable replacing selected text with typed text.
@@ -80,19 +81,12 @@
   (prog-mode . display-line-numbers-mode)         ;; Enable line numbers in programming modes.
 
   :config
+  (global-set-key (kbd "M-v") #'ek/yank-dwim)
+  (global-set-key (kbd "s-v") #'ek/yank-dwim)
+  (global-set-key (kbd "C-S-v") #'ek/yank-dwim)
   ;; By default emacs gives you access to a lot of *special* buffers, while navigating with [b and ]b,
   ;; this might be confusing for newcomers. This settings make sure ]b and [b will always load a
   ;; file buffer. To see all buffers use <leader> SPC, <leader> b l, or <leader> b i.
-  (defun ek-ai-code-buffer-p (buffer-or-name)
-    "Return non-nil when BUFFER-OR-NAME is an AI Code session or helper buffer."
-    (let ((name (if (stringp buffer-or-name)
-                    buffer-or-name
-                  (buffer-name buffer-or-name))))
-      (or (string-match-p "\\`\\*.*\\[.*\\].*\\*\\'" name)
-          (string-match-p "\\`\\*[Aa][Ii] Code.*\\*\\'" name)
-          (string-match-p "\\`\\*ai-code-.*\\*\\'" name)
-          (string-match-p "\\`ai-code-mcp-http-server <.*>\\'" name))))
-
   (defun ek-magit-buffer-p (buffer-or-name)
     "Return non-nil when BUFFER-OR-NAME is a Magit buffer."
     (let ((buffer (if (bufferp buffer-or-name)
@@ -105,15 +99,10 @@
   (defun skip-these-buffers (_window buffer _bury-or-kill)
     "Function for `switch-to-prev-buffer-skip'."
     (or (string-match "\\*[^*]+\\*" (buffer-name buffer))
-        (ek-ai-code-buffer-p buffer)
         (ek-magit-buffer-p buffer)))
   (setq switch-to-prev-buffer-skip 'skip-these-buffers)
   (with-eval-after-load 'consult
-    (dolist (regexp '("\\`\\*.*\\[.*\\].*\\*\\'"
-                      "\\`\\*[Aa][Ii] Code.*\\*\\'"
-                      "\\`\\*ai-code-.*\\*\\'"
-                      "\\`ai-code-mcp-http-server <.*>\\'"
-                      "\\`magit\\(?::.*\\)?\\'"
+    (dolist (regexp '("\\`magit\\(?::.*\\)?\\'"
                       "\\`\\*magit.*\\*\\'"
                       "\\`\\*.*magit.*\\*\\'"))
       (add-to-list 'consult-buffer-filter regexp)))
@@ -178,11 +167,11 @@
         ;; Insert a welcome message in the *scratch* buffer displaying loading time and activated packages.
         (with-current-buffer (get-buffer-create "*scratch*")
         (insert (format
-                    ";;    Welcome to Emacs!
-                    ;;
-                    ;;    Loading time : %s
-                    ;;    Packages     : %s
-                    "
+    ";;    Welcome to Emacs!
+;;
+;;    Loading time : %s
+;;    Packages     : %s
+    "
                     (emacs-init-time)
                     (length (hash-table-keys straight--recipe-cache))))))))
 
@@ -223,47 +212,60 @@
   (interactive)
   (enlarge-window ek/window-resize-step))
 
-(defun ek/ai-code-window-width-columns ()
-  "Return the desired AI side-window width in columns."
-  (max 40 (floor (* (frame-width) 0.45))))
-
-(defun ek/update-ai-code-window-width (&rest _)
-  "Keep the AI side-window width at two-fifths of the current frame."
-  (setq ai-code-backends-infra-window-width
-        (ek/ai-code-window-width-columns)))
-
 (defconst ek/config-directory
   (file-name-directory
    (file-truename (or load-file-name user-init-file)))
   "Directory containing the active Emacs-Kick init file.")
 
-(defun ek/ai-code-toggle ()
-  "Toggle visibility of the AI Code session window."
-  (interactive)
-  (let (session-window)
-    (dolist (window (window-list nil 'no-minibuffer))
-      (when (and (fboundp 'ai-code-backends-infra--session-buffer-p)
-                 (ai-code-backends-infra--session-buffer-p
-                  (window-buffer window)))
-        (setq session-window window)))
-    (cond
-     ((and (fboundp 'ai-code-backends-infra--session-buffer-p)
-           (ai-code-backends-infra--session-buffer-p (current-buffer)))
-      (quit-window))
-     ((window-live-p session-window)
-      (delete-window session-window))
-     (t
-      (ai-code-cli-switch-to-buffer)))))
+(defconst ek/elfeed-feeds
+  '("https://lemire.me/blog/feed/"
+    "https://feeds.feedburner.com/TheHackerNews"
+    "https://geohot.github.io/blog/feed.xml"
+    "https://joshblais.com/index.xml")
+  "Static Elfeed feeds for the lean Emacs-Kick setup.")
 
-(defun ek/project-open-root-dired ()
-  "Open the selected project root in Dired."
+(defun ek/yank-dwim ()
+  "Paste appropriately for the current buffer."
   (interactive)
-  (let ((dir (project-prompt-project-dir)))
+  (cond
+   ((derived-mode-p 'vterm-mode)
+    (call-interactively #'vterm-yank))
+   (t
+    (call-interactively #'yank))))
+
+(defun ek/disable-process-kill-query ()
+  "Disable the live-process kill prompt in the current buffer."
+  (setq-local kill-buffer-query-functions
+              (remq #'process-kill-buffer-query-function
+                    kill-buffer-query-functions)))
+
+(defun ek/buffer-project-root (buffer)
+  "Return BUFFER project root, or nil when BUFFER is not in a project."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (when-let ((project (project-current nil)))
+        (expand-file-name (project-root project))))))
+
+(defun ek/project-last-buffer (project-root)
+  "Return the most recent live buffer that belongs to PROJECT-ROOT."
+  (seq-find
+   (lambda (buffer)
+     (equal (ek/buffer-project-root buffer) project-root))
+   (buffer-list)))
+
+(defun ek/project-open ()
+  "Switch to the selected project's last active buffer, or its root Dired."
+  (interactive)
+  (let* ((dir (file-name-as-directory
+               (expand-file-name (project-prompt-project-dir))))
+         (buffer (ek/project-last-buffer dir)))
     (let ((default-directory dir))
       (when-let ((project (project-current nil)))
         (project-remember-project project)))
-    (switch-to-buffer
-     (dired-noselect (file-name-as-directory (expand-file-name dir))))
+    (let ((switch-to-buffer-obey-display-actions nil))
+      (switch-to-buffer
+       (or buffer
+           (dired-noselect dir))))
     (delete-other-windows)))
 
 (defun ek/magit-kill-repo-buffers ()
@@ -451,64 +453,25 @@
   :config
   (org-roam-db-autosync-mode 1))
 
+(defun ek/elfeed-open ()
+  "Open Elfeed using the configured static feed list."
+  (interactive)
+  (setq elfeed-feeds ek/elfeed-feeds)
+  (elfeed))
+
 (use-package elfeed
   :ensure t
   :straight t
   :defer t
+  :init
+  (setq elfeed-feeds ek/elfeed-feeds)
   :custom
   (elfeed-db-directory "~/.elfeed")
   (elfeed-enclosure-default-dir "~/Downloads/elfeed/")
   (elfeed-search-filter "@1-month-ago")
-  (elfeed-use-curl t))
-
-(defun ek/elfeed-configured-feed-urls ()
-  "Return the configured Elfeed feed URLs from `elfeed-feeds'."
-  (mapcar (lambda (feed)
-            (if (listp feed) (car feed) feed))
-          elfeed-feeds))
-
-(defun ek/elfeed-prune-removed-feeds (&rest _)
-  "Remove database entries for feeds no longer present in `elfeed.org'."
-  (when (featurep 'elfeed-org)
-    (rmh-elfeed-org-process rmh-elfeed-org-files rmh-elfeed-org-tree-id))
-  (elfeed-db-load)
-  (let* ((configured-feeds (ek/elfeed-configured-feed-urls))
-         (configured-table (make-hash-table :test 'equal))
-         stale-entry-ids
-         stale-feed-ids)
-    (when (null configured-feeds)
-      (message "Elfeed prune skipped: no feeds loaded from elfeed.org")
-      (cl-return-from ek/elfeed-prune-removed-feeds nil))
-    (dolist (feed-url configured-feeds)
-      (puthash feed-url t configured-table))
-    (with-elfeed-db-visit (entry _feed)
-      (unless (gethash (elfeed-entry-feed-id entry) configured-table)
-        (push (elfeed-entry-id entry) stale-entry-ids)))
-    (maphash (lambda (feed-id _feed)
-               (unless (gethash feed-id configured-table)
-                 (push feed-id stale-feed-ids)))
-             elfeed-db-feeds)
-    (dolist (entry-id stale-entry-ids)
-      (avl-tree-delete elfeed-db-index entry-id)
-      (remhash entry-id elfeed-db-entries))
-    (dolist (feed-id stale-feed-ids)
-      (remhash feed-id elfeed-db-feeds))
-    (when (or stale-entry-ids stale-feed-ids)
-      (elfeed-db-gc)
-      (elfeed-db-save)
-      (message "Elfeed pruned %d stale entries across %d removed feeds"
-               (length stale-entry-ids)
-               (length stale-feed-ids)))))
-
-(use-package elfeed-org
-  :ensure t
-  :straight t
-  :after (elfeed org)
+  (elfeed-use-curl t)
   :config
-  (setq rmh-elfeed-org-files
-        (list (expand-file-name "elfeed.org" ek/config-directory)))
-  (elfeed-org)
-  (advice-add #'elfeed :before #'ek/elfeed-prune-removed-feeds))
+  (setq elfeed-feeds ek/elfeed-feeds))
 
 
 ;;; WHICH-KEY
@@ -524,8 +487,7 @@
   :ensure nil
   :defer t
   :init
-  (require 'ibuf-ext)
-  (add-to-list 'ibuffer-never-show-predicates #'ek-ai-code-buffer-p))
+  (require 'ibuf-ext))
 
 
 ;;; ==================== EXTERNAL PACKAGES ====================
@@ -844,6 +806,8 @@
   :ensure t
   :straight t
   :commands (vterm vterm-mode)
+  :hook
+  (vterm-mode . ek/disable-process-kill-query)
   :init
   (defun ek/vterm-project-root ()
     "Return the current project root, or `default-directory' when not in a project."
@@ -956,37 +920,14 @@
       (if-let ((index (ek/vterm--buffer-index current buffers)))
           (switch-to-buffer (nth (mod (1- index) (length buffers)) buffers))
         (switch-to-buffer (car buffers)))))
+  :config
+  (define-key vterm-mode-map (kbd "M-v") #'vterm-yank)
+  (define-key vterm-mode-map (kbd "s-v") #'vterm-yank)
+  (define-key vterm-mode-map (kbd "C-S-v") #'vterm-yank)
   :defer t)
 
 
 ;;; EAT
-(use-package eat
-  :ensure t
-  :straight t
-  :commands (eat eat-mode)
-  :config
-  (with-eval-after-load 'evil-collection
-    (evil-collection-define-key 'normal 'eat-mode-map
-      "p" #'eat-yank
-      "P" #'eat-yank))
-  :defer t)
-
-
-;;; AI CODE
-(use-package ai-code
-  :ensure t
-  :straight t
-  :defer t
-  :config
-  (setq ai-code-backends-infra-window-side 'right)
-  (ek/update-ai-code-window-width)
-  (add-hook 'window-size-change-functions #'ek/update-ai-code-window-width)
-  (setq ai-code-backends-infra-terminal-backend 'eat)
-  (ai-code-set-backend 'codex)
-  (setq ai-code-auto-test-type 'ask-me)
-  (ai-code-prompt-filepath-completion-mode 1))
-
-
 ;;; XCLIP
 (use-package xclip
   :ensure t
@@ -1117,13 +1058,6 @@
     "P" 'consult-yank-from-kill-ring
     "u" 'undo-tree-visualize
 
-    "a a" 'ai-code-menu
-    "a s" 'ai-code-cli-start
-    "a z" 'ek/ai-code-toggle
-    "a q" 'ai-code-ask-question
-    "a c" 'ai-code-code-change
-    "a p" 'ai-code-open-prompt-file
-
     "b n" 'switch-to-next-buffer
     "b p" 'switch-to-prev-buffer
     "b i" 'consult-buffer
@@ -1136,7 +1070,7 @@
     "e d" 'dired-jump
 
     "o a" 'org-agenda
-    "o e" 'elfeed
+    "o e" 'ek/elfeed-open
     "o f" 'org-roam-node-find
     "o i" 'org-roam-node-insert
 
@@ -1158,7 +1092,7 @@
             (revert-buffer t t t))
 
     "j b" 'consult-project-buffer
-    "j o" 'ek/project-open-root-dired
+    "j o" 'ek/project-open
     "j k" 'project-kill-buffers
 
     "s f" 'consult-find
