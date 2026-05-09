@@ -81,6 +81,8 @@ CORE_FORMULAE=(
   bat
   btop
   cmake
+  codex
+  codex-acp
   coreutils
   direnv
   eza

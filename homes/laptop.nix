@@ -1,11 +1,10 @@
-{ config, pkgs, lib, doomemacs, primaryUser, linuxHome, ... }:
+{ config, pkgs, lib, primaryUser, linuxHome, ... }:
 let
   dotfiles = "${config.home.homeDirectory}/projects/nixos-dotfiles/config";
   create_symlink = path: config.lib.file.mkOutOfStoreSymlink path;
-  doomDir = "${config.home.homeDirectory}/.emacs.d";
 
   configs = {
-    doom = "doom";
+    emacs = "emacs-kick";
     hypr = "hypr";
     nvim = "nvim";
     starship = "starship";
@@ -86,12 +85,8 @@ in
     source = create_symlink "${dotfiles}/bash/.bash_profile";
   };
 
-  home.file.".doom.d" = {
-    source = create_symlink "${dotfiles}/doom";
-  };
-
-  home.sessionVariables = {
-    DOOMDIR = "${config.home.homeDirectory}/.config/doom";
+  home.file.".emacs.d/init.el" = {
+    source = create_symlink "${dotfiles}/emacs-kick/init.el";
   };
 
   xdg.configFile = builtins.mapAttrs
@@ -108,31 +103,4 @@ in
   home.activation.ensureBootstrapDirs = lib.hm.dag.entryBefore [ "dconfSettings" ] ''
     mkdir -p "$HOME/.config/dconf" "$HOME/.config/age" "$HOME/.config/isync" "$HOME/.config/msmtp"
   '';
-
-  home.activation.doomInstall = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    doomSrc=${lib.escapeShellArg doomemacs}
-    doomDest=${lib.escapeShellArg doomDir}
-    mkdir -p "$doomDest"
-    ${pkgs.rsync}/bin/rsync -a --delete \
-      --chmod=Du+rwx,Fu+rw \
-      --exclude='.local/' \
-      "$doomSrc"/ "$doomDest"/
-    for d in .local .local/etc .local/cache .local/state; do
-      install -d -m 700 "$doomDest/$d"
-    done
-  '';
-
-  home.activation.doomSync = lib.hm.dag.entryAfter [ "doomInstall" "linkGeneration" ] ''
-    doomBin="${doomDir}/bin/doom"
-    straightFile="${doomDir}/.local/straight/repos/straight.el/straight.el"
-    if [ -x "$doomBin" ]; then
-      export DOOMDIR="${config.home.homeDirectory}/.config/doom"
-      export PATH=${lib.makeBinPath [ pkgs.emacs pkgs.git pkgs.gnutar pkgs.gzip pkgs.coreutils ]}:$PATH
-      if [ ! -f "$straightFile" ]; then
-        "$doomBin" install --force || true
-      fi
-      "$doomBin" sync || true
-    fi
-  '';
-
 }

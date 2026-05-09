@@ -11,13 +11,9 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    doomemacs = {
-      url = "github:doomemacs/doomemacs";
-      flake = false;
-    };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, agenix, doomemacs, ... }:
+  outputs = inputs@{ self, nixpkgs, home-manager, agenix, ... }:
     let
       inherit (nixpkgs.lib) nixosSystem;
       primaryUser = "tim";
@@ -30,7 +26,7 @@
           };
           modules = [ hmConfig ];
           extraSpecialArgs = {
-            inherit doomemacs primaryUser linuxHome;
+            inherit primaryUser linuxHome;
           };
         };
       baseModules = [
@@ -55,7 +51,7 @@
                   users.${primaryUser} = import hmConfig;
                   backupFileExtension = "backup";
                   extraSpecialArgs = {
-                    inherit doomemacs primaryUser linuxHome;
+                    inherit primaryUser linuxHome;
                   };
                 };
               }

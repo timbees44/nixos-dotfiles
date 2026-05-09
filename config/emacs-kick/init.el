@@ -109,8 +109,6 @@
 
 
   ;; Configure font settings based on the operating system.
-  ;; Ok, this kickstart is meant to be used on the terminal, not on GUI.
-  ;; But without this, I fear you could start Graphical Emacs and be sad :(
   (set-face-attribute 'default nil :family "JetBrainsMono Nerd Font"  :height 150)
   (when (eq system-type 'darwin)       ;; Check if the system is macOS.
     ;; Keep Command as Meta and leave Option free for window-manager bindings.
@@ -126,8 +124,6 @@
 
   ;; Save manual customizations to a separate file instead of cluttering `init.el'.
   ;; You can M-x customize, M-x customize-group, or M-x customize-themes, etc.
-  ;; The saves you do manually using the Emacs interface would overwrite this file.
-  ;; The following makes sure those customizations are in a separate file.
   (setq custom-file (locate-user-emacs-file "custom-vars.el")) ;; Specify the custom file path.
   (load custom-file 'noerror 'nomessage)                       ;; Load the custom file quietly, ignoring errors.
 
@@ -285,6 +281,25 @@
     (message "Killed %d Magit buffer%s"
              killed
              (if (= killed 1) "" "s"))))
+
+(defun ek/hide-buffer-from-buffer-list (buffer)
+  "Rename BUFFER to an internal name so it stays out of normal buffer lists."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (let ((name (buffer-name)))
+        (unless (or (null name) (string-prefix-p " " name))
+          (rename-buffer (concat " " name) t))))))
+
+(defun ek/agent-shell-hide-acp-stderr-buffers (orig-fn &rest args)
+  "Hide newly created ACP stderr buffers while delegating to ORIG-FN with ARGS."
+  (let ((before (buffer-list))
+        client)
+    (setq client (apply orig-fn args))
+    (dolist (buffer (buffer-list))
+      (unless (memq buffer before)
+        (when (string-prefix-p "acp-client-stderr" (buffer-name buffer))
+          (ek/hide-buffer-from-buffer-list buffer))))
+    client))
 
 (use-package window
   :ensure nil       ;; This is built-in, no need to fetch it.
@@ -472,7 +487,6 @@
   (elfeed-use-curl t)
   :config
   (setq elfeed-feeds ek/elfeed-feeds))
-
 
 ;;; WHICH-KEY
 (use-package which-key
@@ -926,8 +940,6 @@
   (define-key vterm-mode-map (kbd "C-S-v") #'vterm-yank)
   :defer t)
 
-
-;;; EAT
 ;;; XCLIP
 (use-package xclip
   :ensure t
@@ -1321,6 +1333,19 @@
   :straight t
   :config
   (load-theme 'doom-gruvbox :no-confirm))
+
+;;; AI
+;; agent-shell
+(use-package agent-shell
+  :ensure t
+  :config
+  (with-eval-after-load 'acp
+    (unless (advice-member-p #'ek/agent-shell-hide-acp-stderr-buffers 'acp-new-client)
+      (advice-add 'acp-new-client :around #'ek/agent-shell-hide-acp-stderr-buffers))))
+
+(use-package agent-shell-sidebar
+  :after agent-shell
+  :vc (:url "https://github.com/cmacrae/agent-shell-sidebar"))
 
 
 ;;; UTILITARY FUNCTION TO INSTALL EMACS-KICK
