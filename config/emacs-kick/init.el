@@ -290,16 +290,17 @@
         (unless (or (null name) (string-prefix-p " " name))
           (rename-buffer (concat " " name) t))))))
 
+(defun ek/hide-acp-stderr-buffers ()
+  "Hide any visible ACP stderr buffers from normal buffer lists."
+  (dolist (buffer (buffer-list))
+    (when (string-prefix-p "acp-client-stderr" (buffer-name buffer))
+      (ek/hide-buffer-from-buffer-list buffer))))
+
 (defun ek/agent-shell-hide-acp-stderr-buffers (orig-fn &rest args)
   "Hide newly created ACP stderr buffers while delegating to ORIG-FN with ARGS."
-  (let ((before (buffer-list))
-        client)
-    (setq client (apply orig-fn args))
-    (dolist (buffer (buffer-list))
-      (unless (memq buffer before)
-        (when (string-prefix-p "acp-client-stderr" (buffer-name buffer))
-          (ek/hide-buffer-from-buffer-list buffer))))
-    client))
+  (prog1
+      (apply orig-fn args)
+    (ek/hide-acp-stderr-buffers)))
 
 (use-package window
   :ensure nil       ;; This is built-in, no need to fetch it.
@@ -940,6 +941,7 @@
   (define-key vterm-mode-map (kbd "C-S-v") #'vterm-yank)
   :defer t)
 
+
 ;;; XCLIP
 (use-package xclip
   :ensure t
@@ -958,24 +960,6 @@
   (prog-mode . indent-guide-mode)  ;; Activate indent-guide in programming modes.
   :config
   (setq indent-guide-char "│"))    ;; Set the character used for the indent guide.
-
-
-;;; ADD-NODE-MODULES-PATH
-(use-package add-node-modules-path
-  :ensure t
-  :straight t
-  :defer t
-  :custom
-  ;; Makes sure you are using the local bin for your
-  ;; node project. Local eslint, typescript server...
-  (eval-after-load 'typescript-ts-mode
-    '(add-hook 'typescript-ts-mode-hook #'add-node-modules-path))
-  (eval-after-load 'tsx-ts-mode
-    '(add-hook 'tsx-ts-mode-hook #'add-node-modules-path))
-  (eval-after-load 'typescriptreact-mode
-    '(add-hook 'typescriptreact-mode-hook #'add-node-modules-path))
-  (eval-after-load 'js-mode
-    '(add-hook 'js-mode-hook #'add-node-modules-path)))
 
 
 ;;; EVIL
@@ -1247,43 +1231,6 @@
   (add-to-list 'pulsar-pulse-functions 'diff-hl-previous-hunk))
 
 
-;;; DOOM MODELINE
-(use-package doom-modeline
-  :ensure t
-  :straight t
-  :defer t
-  :custom
-  (doom-modeline-buffer-file-name-style 'buffer-name)  ;; Set the buffer file name style to just the buffer name (without path).
-  (doom-modeline-project-detection nil)                ;; Avoid project resolution on every file open.
-  (doom-modeline-buffer-name t)                        ;; Show the buffer name in the mode line.
-  (doom-modeline-vcs-max-length 25)                    ;; Limit the version control system (VCS) branch name length to 25 characters.
-  :config
-  (if ek-use-nerd-fonts                                ;; Check if nerd fonts are being used.
-      (setq doom-modeline-icon t)                      ;; Enable icons in the mode line if nerd fonts are used.
-    (setq doom-modeline-icon nil))                     ;; Disable icons if nerd fonts are not being used.
-  (remove-hook 'find-file-hook #'doom-modeline-update-vcs)
-  (remove-hook 'after-save-hook #'doom-modeline-update-vcs)
-  (when (advice-member-p #'doom-modeline-update-vcs #'vc-refresh-state)
-    (advice-remove #'vc-refresh-state #'doom-modeline-update-vcs))
-  :hook
-  (after-init . doom-modeline-mode))
-
-
-;;; NEOTREE
-(use-package neotree
-  :ensure t
-  :straight t
-  :custom
-  (neo-show-hidden-files t)                ;; By default shows hidden files (toggle with H)
-  (neo-theme 'nerd)                        ;; Set the default theme for Neotree to 'nerd' for a visually appealing look.
-  (neo-vc-integration '(face char))        ;; Enable VC integration to display file states with faces (color coding) and characters (icons).
-  :defer t                                 ;; Load the package only when needed to improve startup time.
-  :config
-  (if ek-use-nerd-fonts                    ;; Check if nerd fonts are being used.
-      (setq neo-theme 'nerd-icons)         ;; Set the theme to 'nerd-icons' if nerd fonts are available.
-    (setq neo-theme 'nerd)))               ;; Otherwise, fall back to the 'nerd' theme.
-
-
 ;;; NERD ICONS
 (use-package nerd-icons
   :if ek-use-nerd-fonts                   ;; Load the package only if the user has configured to use nerd fonts.
@@ -1302,6 +1249,15 @@
   (dired-mode . nerd-icons-dired-mode))
 
 
+;;; NYAN MODE
+(use-package nyan-mode
+;  :ensure t
+  :custom
+  (nyan-bar-length 10)
+  :config
+  (nyan-mode +1))
+
+
 ;;; NERD ICONS COMPLETION
 (use-package nerd-icons-completion
   :if ek-use-nerd-fonts                   ;; Load the package only if the user has configured to use nerd fonts.
@@ -1313,39 +1269,38 @@
   (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup)) ;; Setup icons in the marginalia mode for enhanced completion display.
 
 
-;;; THEMES
-(use-package catppuccin-theme
-  :ensure t
-  :straight t
-  :init
-  (setq catppuccin-flavor 'mocha)
-  :config
-  (custom-set-faces
-   `(diff-hl-change ((t (:background unspecified :foreground ,(catppuccin-get-color 'blue))))))
-  (custom-set-faces
-   `(diff-hl-delete ((t (:background unspecified :foreground ,(catppuccin-get-color 'red))))))
-  (custom-set-faces
-   `(diff-hl-insert ((t (:background unspecified :foreground ,(catppuccin-get-color 'green))))))
-  :defer t)
-
 (use-package doom-themes
   :ensure t
   :straight t
   :config
   (load-theme 'doom-gruvbox :no-confirm))
 
+
+;;; DOOM MODELINE
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1))
+
+
+;;; NYAN MODE
+(use-package nyan-mode
+  :ensure t
+  :custom
+  (nyan-bar-length 10)
+  :config
+  (nyan-mode +1))
+
+
 ;;; AI
 ;; agent-shell
 (use-package agent-shell
-  :ensure t
+  :ensure nil
+  :straight t
   :config
   (with-eval-after-load 'acp
+    (ek/hide-acp-stderr-buffers)
     (unless (advice-member-p #'ek/agent-shell-hide-acp-stderr-buffers 'acp-new-client)
       (advice-add 'acp-new-client :around #'ek/agent-shell-hide-acp-stderr-buffers))))
-
-(use-package agent-shell-sidebar
-  :after agent-shell
-  :vc (:url "https://github.com/cmacrae/agent-shell-sidebar"))
 
 
 ;;; UTILITARY FUNCTION TO INSTALL EMACS-KICK
