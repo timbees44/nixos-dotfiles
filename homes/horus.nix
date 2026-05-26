@@ -39,6 +39,7 @@ in
     btop
     cmake
     codex
+    codex-acp
     curl
     deluge
     discord

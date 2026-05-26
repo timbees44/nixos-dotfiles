@@ -1,14 +1,20 @@
 { config, lib, pkgs, primaryUser, linuxHome, ... }:
 let
   ageKeyPath = "${linuxHome}/.config/age/keys.txt";
+  windowsEsp = "/dev/disk/by-partuuid/ad956a07-59cb-45e1-899a-ae54cedbdc29";
 in
 
 {
   imports = lib.optional (builtins.pathExists ./hardware-configuration.nix)
     ./hardware-configuration.nix;
 
-  boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot.enable = lib.mkForce false;
+  boot.loader.timeout = 5;
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.lanzaboote = {
+    enable = true;
+    pkiBundle = "/var/lib/sbctl";
+  };
 
   networking.hostName = "horus";
   networking.networkmanager = {
@@ -123,6 +129,7 @@ in
     vim
     git
     wget
+    sbctl
     cmake
     gnumake
     gcc
@@ -141,6 +148,30 @@ in
   ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+  system.activationScripts.horusWindowsBootEntry.text = ''
+    windows_esp_mount=/run/horus-windows-esp
+
+    mkdir -p "$windows_esp_mount" /boot/EFI /boot/loader/entries
+
+    if mountpoint -q "$windows_esp_mount"; then
+      umount "$windows_esp_mount"
+    fi
+
+    if mount -o ro ${windowsEsp} "$windows_esp_mount"; then
+      if [ -d "$windows_esp_mount/EFI/Microsoft" ]; then
+        rm -rf /boot/EFI/Microsoft
+        cp -r "$windows_esp_mount/EFI/Microsoft" /boot/EFI/
+      fi
+      umount "$windows_esp_mount"
+    fi
+
+    cat > /boot/loader/entries/windows.conf <<'EOF'
+    title Windows Boot Manager
+    efi /EFI/Microsoft/Boot/bootmgfw.efi
+    sort-key z_windows
+    EOF
+  '';
 
   system.stateVersion = "24.05";
 }

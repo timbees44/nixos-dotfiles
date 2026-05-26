@@ -11,9 +11,13 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote/v0.4.3";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, agenix, ... }:
+  outputs = inputs@{ self, nixpkgs, home-manager, agenix, lanzaboote, ... }:
     let
       inherit (nixpkgs.lib) nixosSystem;
       primaryUser = "tim";
@@ -68,6 +72,7 @@
 
         horus = mkHost {
           modules = [
+            lanzaboote.nixosModules.lanzaboote
             ./hosts/horus/default.nix
           ];
           hmConfig = ./homes/horus.nix;
