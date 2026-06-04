@@ -60,6 +60,7 @@ in
     neovim
     nitch
     nixpkgs-fmt
+    ollama
     pcmanfm
     python3
     ripgrep

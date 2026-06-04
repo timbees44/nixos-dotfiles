@@ -24,6 +24,7 @@ in
       backend = "wpa_supplicant";
     };
   };
+  networking.firewall.allowedTCPPorts = [ 11434 ];
   services.xserver.videoDrivers = [ "nvidia" ];
 
   age.identityPaths = [ ageKeyPath ];
@@ -59,6 +60,11 @@ in
   services.mullvad-vpn = {
     enable = true;
     package = pkgs.mullvad-vpn;
+  };
+  services.ollama = {
+    enable = true;
+    host = "0.0.0.0";
+    port = 11434;
   };
   services.syncthing = {
     enable = true;
