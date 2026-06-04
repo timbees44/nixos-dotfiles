@@ -217,7 +217,9 @@
   '("https://lemire.me/blog/feed/"
     "https://feeds.feedburner.com/TheHackerNews"
     "https://geohot.github.io/blog/feed.xml"
-    "https://joshblais.com/index.xml")
+    "https://joshblais.com/index.xml"
+    "https://xenodium.com/rss.xml"
+    "https://xn--gckvb8fzb.com/index.xml")
   "Static Elfeed feeds for the lean Emacs-Kick setup.")
 
 (defun ek/yank-dwim ()
