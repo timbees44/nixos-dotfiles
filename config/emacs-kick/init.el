@@ -44,6 +44,60 @@
   :type 'boolean
   :group 'appearance)
 
+(defun ek/mail-address-from-msmtp-config ()
+  "Read the default sender address from the local msmtp config."
+  (let ((msmtp-config (expand-file-name "~/.config/msmtp/config")))
+    (when (file-readable-p msmtp-config)
+      (with-temp-buffer
+        (insert-file-contents msmtp-config)
+        (goto-char (point-min))
+        (when (re-search-forward "^from[[:space:]]+\\(.+\\)$" nil t)
+          (string-trim (match-string 1)))))))
+
+(defun ek/executable-or-first-existing (&rest candidates)
+  "Return the first executable or existing path from CANDIDATES."
+  (seq-some
+   (lambda (candidate)
+     (cond
+      ((null candidate) nil)
+      ((file-executable-p candidate) candidate)
+      ((file-exists-p candidate) candidate)
+      (t (executable-find candidate))))
+   candidates))
+
+(defun ek/user-profile-path (suffix)
+  "Return SUFFIX under the current user's Nix profile path."
+  (expand-file-name suffix
+                    (format "/etc/profiles/per-user/%s" (user-login-name))))
+
+(defun ek/add-existing-directories-to-load-path (&rest directories)
+  "Add each existing directory in DIRECTORIES to `load-path'."
+  (dolist (dir directories)
+    (when (file-directory-p dir)
+      (add-to-list 'load-path dir))))
+
+(setq user-mail-address
+      (or (ek/mail-address-from-msmtp-config) user-mail-address))
+
+(when-let ((mu-binary
+            (ek/executable-or-first-existing
+             "mu"
+             "/opt/homebrew/bin/mu"
+             "/usr/local/bin/mu"
+             (ek/user-profile-path "bin/mu")
+             "/run/current-system/sw/bin/mu"
+             (expand-file-name "~/.nix-profile/bin/mu"))))
+  (setq mu4e-mu-binary mu-binary))
+
+(ek/add-existing-directories-to-load-path
+ "/opt/homebrew/share/emacs/site-lisp/mu/mu4e"
+ "/opt/homebrew/opt/mu/share/emacs/site-lisp/mu4e"
+ "/usr/local/share/emacs/site-lisp/mu/mu4e"
+ "/usr/local/opt/mu/share/emacs/site-lisp/mu4e"
+ (ek/user-profile-path "share/emacs/site-lisp/mu4e")
+ "/run/current-system/sw/share/emacs/site-lisp/mu4e"
+ (expand-file-name "~/.nix-profile/share/emacs/site-lisp/mu4e"))
+
 
 ;;; EMACS
 (use-package emacs
@@ -219,7 +273,8 @@
     "https://geohot.github.io/blog/feed.xml"
     "https://joshblais.com/index.xml"
     "https://xenodium.com/rss.xml"
-    "https://xn--gckvb8fzb.com/index.xml")
+    "https://xn--gckvb8fzb.com/index.xml"
+    "https://www.youtube.com/feeds/videos.xml?channel_id=UC1tV5SjRyejRGeHAaMGYSsQ")
   "Static Elfeed feeds for the lean Emacs-Kick setup.")
 
 (defun ek/yank-dwim ()
@@ -250,6 +305,23 @@
    (lambda (buffer)
      (equal (ek/buffer-project-root buffer) project-root))
    (buffer-list)))
+
+(defun ek/org-fill-region-after-yank (beg end)
+  "Reflow yanked Org text between BEG and END."
+  (let ((fill-prefix nil)
+        (adaptive-fill-mode nil))
+    (fill-region beg end nil t)))
+
+(defun ek/org-yank-advice (orig-fn &rest args)
+  "Run ORIG-FN with ARGS and reflow pasted text in Org buffers."
+  (let ((start (point))
+        (in-org-mode (derived-mode-p 'org-mode)))
+    (prog1
+        (apply orig-fn args)
+      (when (and in-org-mode
+                 (use-region-p)
+                 (> (region-end) start))
+        (ek/org-fill-region-after-yank start (region-end))))))
 
 (defun ek/project-open ()
   "Switch to the selected project's last active buffer, or its root Dired."
@@ -365,6 +437,56 @@
   (erc-autojoin-channels-alist '((".*\\.libera\\.chat" "#emacs"))));; Automatically join the #emacs channel on Libera.Chat.
 
 
+;;; MU4E
+(use-package mu4e
+  :ensure nil
+  :defer t
+  :commands (mu4e mu4e-compose-new)
+  :init
+  (setq mail-user-agent 'mu4e-user-agent)
+  :config
+  (let ((mail-address (ek/mail-address-from-msmtp-config))
+        (mbsync
+         (ek/executable-or-first-existing
+          "mbsync"
+          "/opt/homebrew/bin/mbsync"
+          "/usr/local/bin/mbsync"
+          (ek/user-profile-path "bin/mbsync")
+          "/run/current-system/sw/bin/mbsync"
+          (expand-file-name "~/.nix-profile/bin/mbsync")))
+        (msmtp
+         (ek/executable-or-first-existing
+          "msmtp"
+          "/opt/homebrew/bin/msmtp"
+          "/usr/local/bin/msmtp"
+          (ek/user-profile-path "bin/msmtp")
+          "/run/current-system/sw/bin/msmtp"
+          (expand-file-name "~/.nix-profile/bin/msmtp"))))
+    (setq mu4e-maildir "~/.mail"
+          mu4e-user-mail-address-list (when mail-address (list mail-address))
+          mu4e-update-interval 300
+          mu4e-drafts-folder "/gmail/[Gmail]/Drafts"
+          mu4e-sent-folder "/gmail/[Gmail]/Sent Mail"
+          mu4e-trash-folder "/gmail/[Gmail]/Trash"
+          mu4e-refile-folder "/gmail/[Gmail]/All Mail")
+    (when mbsync
+      (setq mu4e-get-mail-command
+            (mapconcat #'identity
+                       (list mbsync
+                             "-c" (expand-file-name "~/.config/isync/mbsyncrc")
+                             "gmail")
+                       " ")))
+    (when msmtp
+      (setq sendmail-program msmtp
+            message-send-mail-function #'message-send-mail-with-sendmail
+            message-sendmail-envelope-from 'header
+            message-sendmail-f-is-evil t
+            message-sendmail-extra-arguments
+            (list "--read-envelope-from"
+                  "--read-recipients"
+                  (concat "--file=" (expand-file-name "~/.config/msmtp/config")))))))
+
+
 ;;; ISEARCH
 (use-package isearch
   :ensure nil                                  ;; This is built-in, no need to fetch it.
@@ -452,8 +574,13 @@
            '("~/Documents/org/inbox.org"
              "~/Documents/org/tasks.org"
              "~/Documents/org/todo.org")))
+  :hook
+  (org-mode . visual-line-mode)
+  (org-mode . auto-fill-mode)
   :config
-  (setq-default fill-column 80))
+  (setq-default fill-column 80)
+  (advice-add #'yank :around #'ek/org-yank-advice)
+  (advice-add #'yank-pop :around #'ek/org-yank-advice))
 
 (use-package org-modern
   :ensure t
@@ -1071,6 +1198,8 @@
     "o e" 'ek/elfeed-open
     "o f" 'org-roam-node-find
     "o i" 'org-roam-node-insert
+    "o m" 'mu4e
+    "o M" 'mu4e-compose-new
 
     "g g" 'magit-status
     "g l" 'magit-log-current

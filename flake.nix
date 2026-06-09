@@ -20,24 +20,11 @@
   outputs = inputs@{ self, nixpkgs, home-manager, agenix, lanzaboote, ... }:
     let
       inherit (nixpkgs.lib) nixosSystem;
-      primaryUser = "tim";
-      linuxHome = "/home/${primaryUser}";
-      mkHome = { hmConfig, system ? "x86_64-linux" }:
-        home-manager.lib.homeManagerConfiguration {
-          pkgs = import nixpkgs {
-            inherit system;
-            config.allowUnfree = true;
-          };
-          modules = [ hmConfig ];
-          extraSpecialArgs = {
-            inherit primaryUser linuxHome;
-          };
-        };
       baseModules = [
         agenix.nixosModules.default
         ./modules/shared
       ];
-      mkHost = { modules, hmConfig ? null, system ? "x86_64-linux" }:
+      mkHost = { modules, primaryUser, linuxHome ? "/home/${primaryUser}", hmConfig ? null, system ? "x86_64-linux" }:
         nixosSystem {
           inherit system;
           specialArgs = {
@@ -64,6 +51,7 @@
     in {
       nixosConfigurations = {
         laptop = mkHost {
+          primaryUser = "tim";
           modules = [
             ./hosts/laptop/default.nix
           ];
@@ -71,6 +59,7 @@
         };
 
         horus = mkHost {
+          primaryUser = "tim";
           modules = [
             lanzaboote.nixosModules.lanzaboote
             ./hosts/horus/default.nix
@@ -79,16 +68,11 @@
         };
 
         eisenstein = mkHost {
+          primaryUser = "tim";
           modules = [
             ./modules/homelab
             ./hosts/server/default.nix
           ];
-        };
-      };
-
-      homeConfigurations = {
-        legion = mkHome {
-          hmConfig = ./homes/wsl-ubuntu.nix;
         };
       };
     };

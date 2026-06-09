@@ -1,12 +1,15 @@
-{ config, lib, pkgs, primaryUser, linuxHome, ... }:
+{ config, lib, pkgs, primaryUser, ... }:
 let
-  ageKeyPath = "${linuxHome}/.config/age/keys.txt";
   windowsEsp = "/dev/disk/by-partuuid/ad956a07-59cb-45e1-899a-ae54cedbdc29";
 in
 
 {
-  imports = lib.optional (builtins.pathExists ./hardware-configuration.nix)
-    ./hardware-configuration.nix;
+  imports =
+    lib.optional (builtins.pathExists ./hardware-configuration.nix)
+      ./hardware-configuration.nix
+    ++ [
+      ../../modules/shared/mail-secrets.nix
+    ];
 
   boot.loader.systemd-boot.enable = lib.mkForce false;
   boot.loader.timeout = 5;
@@ -26,24 +29,6 @@ in
   };
   networking.firewall.allowedTCPPorts = [ 11434 ];
   services.xserver.videoDrivers = [ "nvidia" ];
-
-  age.identityPaths = [ ageKeyPath ];
-  age.secrets = {
-    mbsyncrc = {
-      file = ../../secrets/mbsyncrc.age;
-      path = "${linuxHome}/.config/isync/mbsyncrc";
-      owner = primaryUser;
-      group = "users";
-      mode = "0400";
-    };
-    msmtp-config = {
-      file = ../../secrets/msmtp-config.age;
-      path = "${linuxHome}/.config/msmtp/config";
-      owner = primaryUser;
-      group = "users";
-      mode = "0400";
-    };
-  };
 
   time.timeZone = "Europe/London";
 
