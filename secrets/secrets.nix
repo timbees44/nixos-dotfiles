@@ -6,7 +6,7 @@ let
 
 in
 {
-  "secrets/mbsyncrc.age".publicKeys = [ horus tim ];
-  "secrets/msmtp-config.age".publicKeys = [ horus tim ];
+  "secrets/mbsyncrc.age".publicKeys = [ tim ];
+  "secrets/msmtp-config.age".publicKeys = [ tim ];
   "secrets/frigate-reolink-env.age".publicKeys = [ eisenstein ];
 }
