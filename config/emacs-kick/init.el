@@ -9,7 +9,9 @@
 
 (setq read-process-output-max (* 1024 1024 4))
 
-(setq native-comp-jit-compilation nil)
+(s:def ordinal_to_asciiet(inpt_str: str) -> str:
+       pass
+       q native-comp-jit-compilation nil)
 
 ;;; PACKAGE BOOTSTRAP
 (setq package-enable-at-startup nil)
@@ -98,14 +100,12 @@
       (add-to-list 'load-path dir))))
 
 (defconst ek/macos-borderless-frame-parameters
-  '((undecorated-round . t)
-    (undecorated . t))
-  "Frame parameters used to hide macOS title-bar chrome.")
+  '((undecorated . t))
+  "Frame parameters used to hide macOS title-bar chrome with square corners.")
 
 (defun ek/apply-macos-borderless-frames ()
   "Hide macOS title-bar chrome for current and future frames."
   (when (eq system-type 'darwin)
-    ;; Mirrors Nano's macOS default without loading all of `nano-defaults'.
     (setq mac-use-title-bar nil)
     (dolist (parameter ek/macos-borderless-frame-parameters)
       (setq default-frame-alist
@@ -165,12 +165,17 @@
   (split-width-threshold 300)                     ;; Prevent automatic window splitting if the window width exceeds 300 pixels.
   (switch-to-buffer-obey-display-actions t)       ;; Make buffer switching respect display actions.
   (tab-always-indent 'complete)                   ;; Make the TAB key complete text instead of just indenting.
-  (tab-width 4)                                   ;; Set the tab width to 4 spaces.
+  (tab-width 2)                                   ;; Set the tab width to 2 spaces.
   (treesit-font-lock-level 4)                     ;; Use advanced font locking for Treesit mode.
   ;;(truncate-lines t)                              ;; Enable line truncation to avoid wrapping long lines.
   (use-dialog-box nil)                            ;; Disable dialog boxes in favor of minibuffer prompts.
   (use-short-answers t)                           ;; Use short answers in prompts for quicker responses (y instead of yes)
   (warning-minimum-level :emergency)              ;; Set the minimum level of warnings to display.
+  (scroll-conservatively 101)
+  (scroll-margin 5)
+  (scroll-step 1)
+  (scroll-preserve-screen-position t)
+  (auto-window-vscroll nil)
 
   :hook                                           ;; Add hooks to enable specific features in certain modes.
   (prog-mode . display-line-numbers-mode)         ;; Enable line numbers in programming modes.
@@ -204,7 +209,7 @@
 
 
   ;; Configure font settings based on the operating system.
-  (set-face-attribute 'default nil :family "JetBrainsMono Nerd Font"  :height 150)
+  (set-face-attribute 'default nil :family "JetBrainsMono Nerd Font" :height 150)
   (when (eq system-type 'darwin)       ;; Check if the system is macOS.
     ;; Keep Command as Meta and leave Option free for window-manager bindings.
     (setq mac-command-modifier 'meta
@@ -253,9 +258,9 @@
     (lambda ()
         (message "Emacs has fully loaded. This code runs after startup.")
 
-        ;; Insert a welcome message in the *scratch* buffer displaying loading time and activated packages.
-        (with-current-buffer (get-buffer-create "*scratch*")
-        (insert (format
+	  ;; Insert a welcome message in the *scratch* buffer displaying loading time and activated packages.
+	  (with-current-buffer (get-buffer-create "*scratch*")
+	  (insert (format
     ";;    Welcome to Emacs!
 ;;
 ;;    Loading time : %s
@@ -264,39 +269,18 @@
                     (emacs-init-time)
                     (length (hash-table-keys straight--recipe-cache))))))))
 
-
-;;; NANO
+;;; THEME
 (straight-use-package
- '(nano :type git :host github :repo "rougier/nano-emacs"))
+ '(nord-theme
+   :type git
+   :host github
+   :repo "nordtheme/emacs"
+   :local-repo "nord-emacs"))
 
-;; These must be set before loading/applying Nano faces/theme.
-(setq nano-font-family-monospaced "JetBrainsMono Nerd Font"
-      nano-font-family-proportional nil
-      nano-font-size 18)
-
-;; Pick one theme variant.
-(require 'nano-theme-dark)
-;; (require 'nano-theme-light)
-
-(require 'nano-faces)
-(require 'nano-theme)
-(require 'nano-layout)
-(ek/apply-macos-borderless-frames)
-(require 'nano-modeline)
-
-;; Apply Nano styling.
-(nano-theme-set-dark)
-(nano-theme)
-(nano-faces)
-(nano-modeline)
-
-(with-eval-after-load 'mu4e
-  ;; `nano-mu4e' depends on optional packages that are not part of
-  ;; nano-emacs itself. Skip it cleanly unless they are installed.
-  (when (and (require 'svg-tag-mode nil t)
-             (require 'mu4e-dashboard nil t)
-             (require 'mu4e-thread-folding nil t))
-    (require 'nano-mu4e nil t)))
+(use-package nord-theme
+  :ensure nil
+  :config
+  (load-theme 'nord t))
 
 ;;; WINDOW
 (defun ek/split-window-below-and-focus ()
@@ -333,11 +317,6 @@
   "Enlarge the current window vertically."
   (interactive)
   (enlarge-window ek/window-resize-step))
-
-(defconst ek/config-directory
-  (file-name-directory
-   (file-truename (or load-file-name user-init-file)))
-  "Directory containing the active Emacs-Kick init file.")
 
 (defconst ek/elfeed-feeds
   '("https://lemire.me/blog/feed/"
@@ -543,6 +522,7 @@
           mu4e-user-mail-address-list
           (delq nil (list gmail-address mxroute-address))
           mu4e-update-interval 300
+          mu4e-change-filenames-when-moving t
           mu4e-context-policy 'pick-first
           mu4e-compose-context-policy 'ask-if-none)
     (when mbsync
@@ -719,7 +699,19 @@
   (elfeed-search-filter "@1-month-ago")
   (elfeed-use-curl t)
   :config
-  (setq elfeed-feeds ek/elfeed-feeds))
+  (setq elfeed-feeds ek/elfeed-feeds)
+
+  (defun ek/elfeed-show-quit-window ()
+    "Quit the Elfeed article view without killing the search buffer."
+    (interactive)
+    (quit-window))
+
+  (with-eval-after-load 'elfeed-show
+    (define-key elfeed-show-mode-map (kbd "q") #'ek/elfeed-show-quit-window))
+
+  (with-eval-after-load 'evil-collection-elfeed
+    (evil-define-key 'normal elfeed-show-mode-map
+      (kbd "q") #'ek/elfeed-show-quit-window)))
 
 ;;; WHICH-KEY
 (use-package which-key
@@ -910,9 +902,6 @@
   (corfu-max-width 50)                   ;; Maximum width of completion popup
   (corfu-min-width 50)                   ;; Minimum width of completion popup
   (corfu-popupinfo-delay 0.5)            ;; Delay before showing documentation popup
-  :config
-  (if ek-use-nerd-fonts
-    (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
   :init
   (global-corfu-mode)
   (corfu-popupinfo-mode t))
@@ -1174,17 +1163,6 @@
   (after-init . xclip-mode))     ;; Enable xclip mode after initialization.
 
 
-;;; INDENT-GUIDE
-(use-package indent-guide
-  :defer t
-  :straight t
-  :ensure t
-  :hook
-  (prog-mode . indent-guide-mode)  ;; Activate indent-guide in programming modes.
-  :config
-  (setq indent-guide-char "│"))    ;; Set the character used for the indent guide.
-
-
 ;;; EVIL
 (use-package evil
   :ensure t
@@ -1285,7 +1263,6 @@
     "b s" 'save-buffer
     "b l" 'mode-line-other-buffer
 
-    "e e" 'neotree-toggle
     "e d" 'dired-jump
 
     "o a" 'org-agenda
@@ -1346,7 +1323,7 @@
     "w u" 'winner-undo
     "w r" 'winner-redo
 
-    "x x" 'consult-flymake
+    "X x" 'consult-flymake
     "x d" 'dired
     "x j" 'dired-jump
 
@@ -1428,32 +1405,6 @@
   :straight t
   :ensure t
   :config)
-
-
-;;; PULSAR
-(use-package pulsar
-  :defer t
-  :straight t
-  :ensure t
-  :hook
-  (after-init . pulsar-global-mode)
-  :config
-  (setq pulsar-pulse t)
-  (setq pulsar-delay 0.025)
-  (setq pulsar-iterations 10)
-  (setq pulsar-face 'evil-ex-lazy-highlight)
-
-  (add-to-list 'pulsar-pulse-functions 'evil-scroll-down)
-  (add-to-list 'pulsar-pulse-functions 'flymake-goto-next-error)
-  (add-to-list 'pulsar-pulse-functions 'flymake-goto-prev-error)
-  (add-to-list 'pulsar-pulse-functions 'evil-yank)
-  (add-to-list 'pulsar-pulse-functions 'ek/evil-yank-to-eol)
-  (add-to-list 'pulsar-pulse-functions 'evil-yank-line)
-  (add-to-list 'pulsar-pulse-functions 'evil-delete)
-  (add-to-list 'pulsar-pulse-functions 'evil-delete-line)
-  (add-to-list 'pulsar-pulse-functions 'evil-jump-item)
-  (add-to-list 'pulsar-pulse-functions 'diff-hl-next-hunk)
-  (add-to-list 'pulsar-pulse-functions 'diff-hl-previous-hunk))
 
 
 ;;; NERD ICONS
