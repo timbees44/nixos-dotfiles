@@ -44,6 +44,101 @@
   :type 'boolean
   :group 'appearance)
 
+(defun ek/mail-address-from-msmtp-config ()
+  "Read the default sender address from the local msmtp config."
+  (let ((msmtp-config (expand-file-name "~/.config/msmtp/config")))
+    (when (file-readable-p msmtp-config)
+      (with-temp-buffer
+        (insert-file-contents msmtp-config)
+        (goto-char (point-min))
+        (when (re-search-forward "^from[[:space:]]+\\(.+\\)$" nil t)
+          (string-trim (match-string 1)))))))
+
+(defun ek/msmtp-account-value (account field)
+  "Read FIELD from ACCOUNT in the local msmtp config."
+  (let ((msmtp-config (expand-file-name "~/.config/msmtp/config")))
+    (when (file-readable-p msmtp-config)
+      (with-temp-buffer
+        (insert-file-contents msmtp-config)
+        (goto-char (point-min))
+        (when (re-search-forward
+               (format "^account[[:space:]]+%s\\b" (regexp-quote account))
+               nil t)
+          (let ((section-end
+                 (or (save-excursion
+                       (forward-line 1)
+                       (when (re-search-forward "^account[[:space:]]+" nil t)
+                         (match-beginning 0)))
+                     (point-max))))
+            (when (re-search-forward
+                   (format "^%s[[:space:]]+\\(.+\\)$" (regexp-quote field))
+                   section-end t)
+              (string-trim (match-string 1)))))))))
+
+(defun ek/executable-or-first-existing (&rest candidates)
+  "Return the first executable or existing path from CANDIDATES."
+  (seq-some
+   (lambda (candidate)
+     (cond
+      ((null candidate) nil)
+      ((file-executable-p candidate) candidate)
+      ((file-exists-p candidate) candidate)
+      (t (executable-find candidate))))
+   candidates))
+
+(defun ek/user-profile-path (suffix)
+  "Return SUFFIX under the current user's Nix profile path."
+  (expand-file-name suffix
+                    (format "/etc/profiles/per-user/%s" (user-login-name))))
+
+(defun ek/add-existing-directories-to-load-path (&rest directories)
+  "Add each existing directory in DIRECTORIES to `load-path'."
+  (dolist (dir directories)
+    (when (file-directory-p dir)
+      (add-to-list 'load-path dir))))
+
+(defconst ek/macos-borderless-frame-parameters
+  '((undecorated-round . t)
+    (undecorated . t))
+  "Frame parameters used to hide macOS title-bar chrome.")
+
+(defun ek/apply-macos-borderless-frames ()
+  "Hide macOS title-bar chrome for current and future frames."
+  (when (eq system-type 'darwin)
+    ;; Mirrors Nano's macOS default without loading all of `nano-defaults'.
+    (setq mac-use-title-bar nil)
+    (dolist (parameter ek/macos-borderless-frame-parameters)
+      (setq default-frame-alist
+            (assq-delete-all (car parameter) default-frame-alist))
+      (setq initial-frame-alist
+            (assq-delete-all (car parameter) initial-frame-alist))
+      (add-to-list 'default-frame-alist parameter)
+      (add-to-list 'initial-frame-alist parameter))
+    (when (display-graphic-p)
+      (modify-all-frames-parameters ek/macos-borderless-frame-parameters))))
+
+(setq user-mail-address
+      (or (ek/mail-address-from-msmtp-config) user-mail-address))
+
+(when-let ((mu-binary
+            (ek/executable-or-first-existing
+             "mu"
+             "/opt/homebrew/bin/mu"
+             "/usr/local/bin/mu"
+             (ek/user-profile-path "bin/mu")
+             "/run/current-system/sw/bin/mu"
+             (expand-file-name "~/.nix-profile/bin/mu"))))
+  (setq mu4e-mu-binary mu-binary))
+
+(ek/add-existing-directories-to-load-path
+ "/opt/homebrew/share/emacs/site-lisp/mu/mu4e"
+ "/opt/homebrew/opt/mu/share/emacs/site-lisp/mu4e"
+ "/usr/local/share/emacs/site-lisp/mu/mu4e"
+ "/usr/local/opt/mu/share/emacs/site-lisp/mu4e"
+ (ek/user-profile-path "share/emacs/site-lisp/mu4e")
+ "/run/current-system/sw/share/emacs/site-lisp/mu4e"
+ (expand-file-name "~/.nix-profile/share/emacs/site-lisp/mu4e"))
+
 
 ;;; EMACS
 (use-package emacs
@@ -137,9 +232,7 @@
   (when scroll-bar-mode
     (scroll-bar-mode -1))      ;; Disable the scroll bar if it is active.
 
-  (when (eq system-type 'darwin)
-    ;; Keep the GUI frame free of macOS title-bar chrome.
-    (add-to-list 'default-frame-alist '(undecorated-round . t)))
+  (ek/apply-macos-borderless-frames)
 
   (global-hl-line-mode -1)     ;; Disable highlight of the current line
   (global-auto-revert-mode 1)  ;; Enable global auto-revert mode to keep buffers up to date with their corresponding files.
@@ -171,6 +264,39 @@
                     (emacs-init-time)
                     (length (hash-table-keys straight--recipe-cache))))))))
 
+
+;;; NANO
+(straight-use-package
+ '(nano :type git :host github :repo "rougier/nano-emacs"))
+
+;; These must be set before loading/applying Nano faces/theme.
+(setq nano-font-family-monospaced "JetBrainsMono Nerd Font"
+      nano-font-family-proportional nil
+      nano-font-size 18)
+
+;; Pick one theme variant.
+(require 'nano-theme-dark)
+;; (require 'nano-theme-light)
+
+(require 'nano-faces)
+(require 'nano-theme)
+(require 'nano-layout)
+(ek/apply-macos-borderless-frames)
+(require 'nano-modeline)
+
+;; Apply Nano styling.
+(nano-theme-set-dark)
+(nano-theme)
+(nano-faces)
+(nano-modeline)
+
+(with-eval-after-load 'mu4e
+  ;; `nano-mu4e' depends on optional packages that are not part of
+  ;; nano-emacs itself. Skip it cleanly unless they are installed.
+  (when (and (require 'svg-tag-mode nil t)
+             (require 'mu4e-dashboard nil t)
+             (require 'mu4e-thread-folding nil t))
+    (require 'nano-mu4e nil t)))
 
 ;;; WINDOW
 (defun ek/split-window-below-and-focus ()
@@ -219,7 +345,12 @@
     "https://geohot.github.io/blog/feed.xml"
     "https://joshblais.com/index.xml"
     "https://xenodium.com/rss.xml"
-    "https://xn--gckvb8fzb.com/index.xml")
+    "https://xn--gckvb8fzb.com/index.xml"
+    "https://www.youtube.com/feeds/videos.xml?channel_id=UC1tV5SjRyejRGeHAaMGYSsQ"
+    "https://www.youtube.com/feeds/videos.xml?channel_id=UCcaTUtGzOiS4cqrgtcsHYWg"
+    "https://www.youtube.com/feeds/videos.xml?channel_id=UC1HNvqTpK24NjOh6VsHxdfw"
+    "https://www.youtube.com/feeds/videos.xml?channel_id=UC0uTPqBCFIpZxlz_Lv1tk_g"
+    "https://www.youtube.com/feeds/videos.xml?channel_id=UC4NNPgQ9sOkBjw6GlkgCylg")
   "Static Elfeed feeds for the lean Emacs-Kick setup.")
 
 (defun ek/yank-dwim ()
@@ -250,6 +381,23 @@
    (lambda (buffer)
      (equal (ek/buffer-project-root buffer) project-root))
    (buffer-list)))
+
+(defun ek/org-fill-region-after-yank (beg end)
+  "Reflow yanked Org text between BEG and END."
+  (let ((fill-prefix nil)
+        (adaptive-fill-mode nil))
+    (fill-region beg end nil t)))
+
+(defun ek/org-yank-advice (orig-fn &rest args)
+  "Run ORIG-FN with ARGS and reflow pasted text in Org buffers."
+  (let ((start (point))
+        (in-org-mode (derived-mode-p 'org-mode)))
+    (prog1
+        (apply orig-fn args)
+      (when (and in-org-mode
+                 (use-region-p)
+                 (> (region-end) start))
+        (ek/org-fill-region-after-yank start (region-end))))))
 
 (defun ek/project-open ()
   "Switch to the selected project's last active buffer, or its root Dired."
@@ -365,6 +513,90 @@
   (erc-autojoin-channels-alist '((".*\\.libera\\.chat" "#emacs"))));; Automatically join the #emacs channel on Libera.Chat.
 
 
+;;; MU4E
+(use-package mu4e
+  :ensure nil
+  :defer t
+  :commands (mu4e mu4e-compose-new)
+  :init
+  (setq mail-user-agent 'mu4e-user-agent)
+  :config
+  (let ((gmail-address (ek/msmtp-account-value "gmail" "from"))
+        (mxroute-address (ek/msmtp-account-value "mxroute" "from"))
+        (mbsync
+         (ek/executable-or-first-existing
+          "mbsync"
+          "/opt/homebrew/bin/mbsync"
+          "/usr/local/bin/mbsync"
+          (ek/user-profile-path "bin/mbsync")
+          "/run/current-system/sw/bin/mbsync"
+          (expand-file-name "~/.nix-profile/bin/mbsync")))
+        (msmtp
+         (ek/executable-or-first-existing
+          "msmtp"
+          "/opt/homebrew/bin/msmtp"
+          "/usr/local/bin/msmtp"
+          (ek/user-profile-path "bin/msmtp")
+          "/run/current-system/sw/bin/msmtp"
+          (expand-file-name "~/.nix-profile/bin/msmtp"))))
+    (setq mu4e-maildir "~/.mail"
+          mu4e-user-mail-address-list
+          (delq nil (list gmail-address mxroute-address))
+          mu4e-update-interval 300
+          mu4e-context-policy 'pick-first
+          mu4e-compose-context-policy 'ask-if-none)
+    (when mbsync
+      (setq mu4e-get-mail-command
+            (mapconcat #'identity
+                       (list mbsync
+                             "-c" (expand-file-name "~/.config/isync/mbsyncrc")
+                             "-a")
+                       " ")))
+    (when msmtp
+      (setq sendmail-program msmtp
+            message-send-mail-function #'message-send-mail-with-sendmail
+            message-sendmail-envelope-from nil
+            message-sendmail-f-is-evil t
+            message-sendmail-extra-arguments
+            (list "--read-recipients"
+                  (concat "--file=" (expand-file-name "~/.config/msmtp/config")))))
+    (setq mu4e-contexts
+          (delq nil
+                (list
+                 (when gmail-address
+                   (make-mu4e-context
+                    :name "gmail"
+                    :match-func
+                    (lambda (msg)
+                      (when msg
+                        (string-prefix-p "/gmail/" (mu4e-message-field msg :maildir))))
+                    :vars `((user-mail-address . ,gmail-address)
+                            (message-sendmail-extra-arguments
+                             . ("--account=gmail"
+                                "--read-recipients"
+                                ,(concat "--file=" (expand-file-name "~/.config/msmtp/config"))))
+                            (mu4e-sent-folder . "/gmail/[Gmail]/Sent Mail")
+                            (mu4e-drafts-folder . "/gmail/[Gmail]/Drafts")
+                            (mu4e-trash-folder . "/gmail/[Gmail]/Trash")
+                            (mu4e-refile-folder . "/gmail/[Gmail]/All Mail"))))
+                 (when mxroute-address
+                   (make-mu4e-context
+                    :name "mxroute"
+                    :match-func
+                    (lambda (msg)
+                      (when msg
+                        (string-prefix-p "/mxroute/" (mu4e-message-field msg :maildir))))
+                    :vars `((user-mail-address . ,mxroute-address)
+                            (message-sendmail-extra-arguments
+                             . ("--account=mxroute"
+                                "--read-recipients"
+                                ,(concat "--file=" (expand-file-name "~/.config/msmtp/config"))))
+                            (mu4e-sent-folder . "/mxroute/Sent")
+                            (mu4e-drafts-folder . "/mxroute/Drafts")
+                            (mu4e-trash-folder . "/mxroute/Trash")
+                            (mu4e-refile-folder . "/mxroute/INBOX")))))))))
+
+
 ;;; ISEARCH
 (use-package isearch
   :ensure nil                                  ;; This is built-in, no need to fetch it.
@@ -452,15 +684,13 @@
            '("~/Documents/org/inbox.org"
              "~/Documents/org/tasks.org"
              "~/Documents/org/todo.org")))
-  :config
-  (setq-default fill-column 80))
-
-(use-package org-modern
-  :ensure t
-  :straight t
-  :after org
   :hook
-  (org-mode . org-modern-mode))
+  (org-mode . visual-line-mode)
+  (org-mode . auto-fill-mode)
+  :config
+  (setq-default fill-column 80)
+  (advice-add #'yank :around #'ek/org-yank-advice)
+  (advice-add #'yank-pop :around #'ek/org-yank-advice))
 
 (use-package org-roam
   :ensure t
@@ -686,15 +916,6 @@
   :init
   (global-corfu-mode)
   (corfu-popupinfo-mode t))
-
-
-;;; NERD-ICONS-CORFU
-(use-package nerd-icons-corfu
-  :if ek-use-nerd-fonts
-  :ensure t
-  :straight t
-  :defer t
-  :after (:all corfu))
 
 
 ;;; LSP
@@ -1071,6 +1292,8 @@
     "o e" 'ek/elfeed-open
     "o f" 'org-roam-node-find
     "o i" 'org-roam-node-insert
+    "o m" 'mu4e
+    "o M" 'mu4e-compose-new
 
     "g g" 'magit-status
     "g l" 'magit-log-current
@@ -1249,48 +1472,6 @@
   :defer t                                ;; Load the package only when needed to improve startup time.
   :hook
   (dired-mode . nerd-icons-dired-mode))
-
-
-;;; NYAN MODE
-(use-package nyan-mode
-;  :ensure t
-  :custom
-  (nyan-bar-length 10)
-  :config
-  (nyan-mode +1))
-
-
-;;; NERD ICONS COMPLETION
-(use-package nerd-icons-completion
-  :if ek-use-nerd-fonts                   ;; Load the package only if the user has configured to use nerd fonts.
-  :ensure t                               ;; Ensure the package is installed.
-  :straight t
-  :after (:all nerd-icons marginalia)     ;; Load after `nerd-icons' and `marginalia' to ensure proper integration.
-  :config
-  (nerd-icons-completion-mode)            ;; Activate nerd icons for completion interfaces.
-  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup)) ;; Setup icons in the marginalia mode for enhanced completion display.
-
-
-(use-package doom-themes
-  :ensure t
-  :straight t
-  :config
-  (load-theme 'doom-gruvbox :no-confirm))
-
-
-;;; DOOM MODELINE
-(use-package doom-modeline
-  :ensure t
-  :init (doom-modeline-mode 1))
-
-
-;;; NYAN MODE
-(use-package nyan-mode
-  :ensure t
-  :custom
-  (nyan-bar-length 10)
-  :config
-  (nyan-mode +1))
 
 
 ;;; AI
