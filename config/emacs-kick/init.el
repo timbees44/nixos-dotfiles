@@ -9,9 +9,7 @@
 
 (setq read-process-output-max (* 1024 1024 4))
 
-(s:def ordinal_to_asciiet(inpt_str: str) -> str:
-       pass
-       q native-comp-jit-compilation nil)
+(setq native-comp-jit-compilation nil)
 
 ;;; PACKAGE BOOTSTRAP
 (setq package-enable-at-startup nil)
