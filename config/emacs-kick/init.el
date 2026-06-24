@@ -274,8 +274,9 @@
 (use-package ef-themes
   :ensure nil
   :config
-  (load-theme 'ef-summer t))
-`
+  (load-theme 'ef-bio t))
+
+
 ;;; WINDOW
 (defun ek/split-window-below-and-focus ()
   "Split the current window below and move focus to the new window."
