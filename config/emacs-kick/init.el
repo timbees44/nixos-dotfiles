@@ -267,19 +267,15 @@
                     (emacs-init-time)
                     (length (hash-table-keys straight--recipe-cache))))))))
 
-;;; THEME
-(straight-use-package
- '(nord-theme
-   :type git
-   :host github
-   :repo "nordtheme/emacs"
-   :local-repo "nord-emacs"))
 
-(use-package nord-theme
+;;; THEME
+(straight-use-package 'ef-themes)
+
+(use-package ef-themes
   :ensure nil
   :config
-  (load-theme 'nord t))
-
+  (load-theme 'ef-summer t))
+`
 ;;; WINDOW
 (defun ek/split-window-below-and-focus ()
   "Split the current window below and move focus to the new window."
