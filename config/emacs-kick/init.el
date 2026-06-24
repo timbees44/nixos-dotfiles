@@ -323,6 +323,7 @@
     "https://joshblais.com/index.xml"
     "https://xenodium.com/rss.xml"
     "https://xn--gckvb8fzb.com/index.xml"
+    "https://protesilaos.com/master.xml"
     "https://www.youtube.com/feeds/videos.xml?channel_id=UC1tV5SjRyejRGeHAaMGYSsQ"
     "https://www.youtube.com/feeds/videos.xml?channel_id=UCcaTUtGzOiS4cqrgtcsHYWg"
     "https://www.youtube.com/feeds/videos.xml?channel_id=UC1HNvqTpK24NjOh6VsHxdfw"
@@ -697,19 +698,7 @@
   (elfeed-search-filter "@1-month-ago")
   (elfeed-use-curl t)
   :config
-  (setq elfeed-feeds ek/elfeed-feeds)
-
-  (defun ek/elfeed-show-quit-window ()
-    "Quit the Elfeed article view without killing the search buffer."
-    (interactive)
-    (quit-window))
-
-  (with-eval-after-load 'elfeed-show
-    (define-key elfeed-show-mode-map (kbd "q") #'ek/elfeed-show-quit-window))
-
-  (with-eval-after-load 'evil-collection-elfeed
-    (evil-define-key 'normal elfeed-show-mode-map
-      (kbd "q") #'ek/elfeed-show-quit-window)))
+  (setq elfeed-feeds ek/elfeed-feeds))
 
 ;;; WHICH-KEY
 (use-package which-key
