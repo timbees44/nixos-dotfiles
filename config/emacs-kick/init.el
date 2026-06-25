@@ -654,12 +654,12 @@
   :custom
   (org-M-RET-may-split-line nil)
   (org-agenda-window-setup 'current-window)
+  (org-archive-location "~/Documents/org/archive.org::")
   (org-directory (expand-file-name "~/Documents/org/"))
   (org-agenda-files
    (mapcar #'expand-file-name
            '("~/Documents/org/inbox.org"
-             "~/Documents/org/tasks.org"
-             "~/Documents/org/todo.org")))
+             "~/Documents/org/tasks.org")))
   :hook
   (org-mode . visual-line-mode)
   (org-mode . auto-fill-mode)
