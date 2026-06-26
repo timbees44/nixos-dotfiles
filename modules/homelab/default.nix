@@ -210,20 +210,22 @@ in {
 
         record:
           enabled: true
-          retain:
+          continuous:
+            days: 7
+          motion:
             days: 7
           alerts:
             pre_capture: 2
             post_capture: 3
             retain:
               days: 14
-              mode: active_objects
+              mode: motion
           detections:
             pre_capture: 2
             post_capture: 3
             retain:
               days: 14
-              mode: active_objects
+              mode: motion
 
         review:
           alerts:
