@@ -42,6 +42,59 @@
   :type 'boolean
   :group 'appearance)
 
+(defun ek/mail-address-from-msmtp-config ()
+  "Read the default sender address from the local msmtp config."
+  (let ((msmtp-config (expand-file-name "~/.config/msmtp/config")))
+    (when (file-readable-p msmtp-config)
+      (with-temp-buffer
+        (insert-file-contents msmtp-config)
+        (goto-char (point-min))
+        (when (re-search-forward "^from[[:space:]]+\\(.+\\)$" nil t)
+          (string-trim (match-string 1)))))))
+
+(defun ek/msmtp-account-value (account field)
+  "Read FIELD from ACCOUNT in the local msmtp config."
+  (let ((msmtp-config (expand-file-name "~/.config/msmtp/config")))
+    (when (file-readable-p msmtp-config)
+      (with-temp-buffer
+        (insert-file-contents msmtp-config)
+        (goto-char (point-min))
+        (when (re-search-forward
+               (format "^account[[:space:]]+%s\\b" (regexp-quote account))
+               nil t)
+          (let ((section-end
+                 (or (save-excursion
+                       (forward-line 1)
+                       (when (re-search-forward "^account[[:space:]]+" nil t)
+                         (match-beginning 0)))
+                     (point-max))))
+            (when (re-search-forward
+                   (format "^%s[[:space:]]+\\(.+\\)$" (regexp-quote field))
+                   section-end t)
+              (string-trim (match-string 1)))))))))
+
+(defun ek/executable-or-first-existing (&rest candidates)
+  "Return the first executable or existing path from CANDIDATES."
+  (seq-some
+   (lambda (candidate)
+     (cond
+      ((null candidate) nil)
+      ((file-executable-p candidate) candidate)
+      ((file-exists-p candidate) candidate)
+      (t (executable-find candidate))))
+   candidates))
+
+(defun ek/user-profile-path (suffix)
+  "Return SUFFIX under the current user's Nix profile path."
+  (expand-file-name suffix
+                    (format "/etc/profiles/per-user/%s" (user-login-name))))
+
+(defun ek/add-existing-directories-to-load-path (&rest directories)
+  "Add each existing directory in DIRECTORIES to `load-path'."
+  (dolist (dir directories)
+    (when (file-directory-p dir)
+      (add-to-list 'load-path dir))))
+
 (defconst ek/macos-borderless-frame-parameters
   '((undecorated . t))
   "Frame parameters used to hide macOS title-bar chrome with square corners.")
