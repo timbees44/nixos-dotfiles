@@ -1,0 +1,31 @@
+;; Timeless home-row mods for the built-in Mac keyboard.
+;;
+;; Same-hand rolls resolve as taps. Opposite-hand chords can resolve as holds.
+;; Tune `tap-ms` and `hold-ms` if the modifiers feel too slow or too eager.
+
+(defcfg
+  process-unmapped-keys yes
+  macos-dev-names-include ("Apple Internal Keyboard / Trackpad"))
+
+(defsrc
+  a s d f j k l ;)
+
+(defvar
+  tap-ms 150
+  hold-ms 200
+  same-left (q w e r t a s d f g z x c v b)
+  same-right (y u i o p h j k l ; n m , . /))
+
+(defalias
+  a-shift (tap-hold-tap-keys $tap-ms $hold-ms a lsft $same-left)
+  s-cmd   (tap-hold-tap-keys $tap-ms $hold-ms s lmet $same-left)
+  d-ctrl  (tap-hold-tap-keys $tap-ms $hold-ms d lctl $same-left)
+  f-alt   (tap-hold-tap-keys $tap-ms $hold-ms f lalt $same-left)
+
+  j-alt   (tap-hold-tap-keys $tap-ms $hold-ms j ralt $same-right)
+  k-ctrl  (tap-hold-tap-keys $tap-ms $hold-ms k rctl $same-right)
+  l-cmd   (tap-hold-tap-keys $tap-ms $hold-ms l rmet $same-right)
+  semi-shift (tap-hold-tap-keys $tap-ms $hold-ms ; rsft $same-right))
+
+(deflayer base
+  @a-shift @s-cmd @d-ctrl @f-alt @j-alt @k-ctrl @l-cmd @semi-shift)

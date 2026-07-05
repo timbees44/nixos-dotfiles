@@ -197,6 +197,10 @@ OPTIONAL_FORMULAE=(
   mu
 )
 
+UI_FORMULAE=(
+  kanata
+)
+
 UI_CASKS=(
   aerospace
   karabiner-elements
@@ -266,6 +270,9 @@ run_bootstrap() {
   brew_install_if_missing "${OPTIONAL_FORMULAE[@]}"
 
   if [[ "$WITH_UI" -eq 1 ]]; then
+    echo "Installing optional UI formulae..."
+    brew_install_if_missing "${UI_FORMULAE[@]}"
+
     echo "Installing optional UI casks..."
     brew_install_cask_if_missing "${UI_CASKS[@]}"
   fi
@@ -290,6 +297,7 @@ run_bootstrap() {
 
   if [[ "$WITH_UI" -eq 1 ]]; then
     link_path "${CONFIG_DIR}/aerospace" "$HOME/.config/aerospace"
+    link_path "${CONFIG_DIR}/kanata" "$HOME/.config/kanata"
     link_path "${CONFIG_DIR}/karabiner" "$HOME/.config/karabiner"
     link_path "${CONFIG_DIR}/sketchybar" "$HOME/.config/sketchybar"
     link_path "${CONFIG_DIR}/walls/prometheus.png" "$HOME/pictures/walls/prometheus.png"

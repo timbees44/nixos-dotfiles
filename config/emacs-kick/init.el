@@ -34,6 +34,8 @@
 
 
 (require 'package)
+(require 'seq)
+(require 'subr-x)
 
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 
@@ -59,6 +61,61 @@
       (add-to-list 'initial-frame-alist parameter))
     (when (display-graphic-p)
       (modify-all-frames-parameters ek/macos-borderless-frame-parameters))))
+
+(defun ek/user-profile-path (path)
+  "Return PATH inside the active Nix profile."
+  (expand-file-name path (or (getenv "NIX_PROFILE")
+                             (expand-file-name "~/.nix-profile"))))
+
+(defun ek/executable-or-first-existing (&rest paths)
+  "Return the first executable found from PATHS."
+  (seq-some
+   (lambda (path)
+     (cond
+      ((null path) nil)
+      ((file-name-absolute-p path)
+       (when (file-executable-p path)
+         path))
+      (t
+       (executable-find path))))
+   paths))
+
+(defun ek/add-existing-directories-to-load-path (&rest directories)
+  "Add existing DIRECTORIES to `load-path'."
+  (dolist (directory directories)
+    (when (and directory (file-directory-p directory))
+      (add-to-list 'load-path directory))))
+
+(defun ek/msmtp-account-value (account key)
+  "Return KEY value for ACCOUNT in the msmtp config."
+  (let ((config-file (expand-file-name "~/.config/msmtp/config"))
+        value
+        in-account)
+    (when (file-readable-p config-file)
+      (with-temp-buffer
+        (insert-file-contents config-file)
+        (goto-char (point-min))
+        (while (not (eobp))
+          (let ((line (string-trim (buffer-substring-no-properties
+                                    (line-beginning-position)
+                                    (line-end-position)))))
+            (cond
+             ((or (string-empty-p line) (string-prefix-p "#" line)))
+             ((string-match-p "\\`account[ \t]+default\\(?:[ \t]+:\\|\\'\\)" line))
+             ((string-match "\\`account[ \t]+\\([^ \t:]+\\)" line)
+              (setq in-account (string= (match-string 1 line) account)))
+             ((and in-account
+                   (string-match
+                    (format "\\`%s[ \t]+\\(.+\\)\\'" (regexp-quote key))
+                    line))
+              (setq value (match-string 1 line)))))
+          (forward-line 1))))
+    value))
+
+(defun ek/mail-address-from-msmtp-config ()
+  "Return the first configured msmtp sender address."
+  (or (ek/msmtp-account-value "gmail" "from")
+      (ek/msmtp-account-value "mxroute" "from")))
 
 (setq user-mail-address
       (or (ek/mail-address-from-msmtp-config) user-mail-address))

@@ -48,9 +48,57 @@ If you also want the optional macOS UI config and wallpaper:
 Optional `--with-ui` also links:
 
 - `~/.config/aerospace`
+- `~/.config/kanata`
 - `~/.config/karabiner`
 - `~/.config/sketchybar`
 - `~/pictures/walls/prometheus.png`
+
+It also installs the `kanata` formula and Karabiner Elements. Kanata uses the
+Karabiner driver on macOS, while `~/.config/karabiner` stays limited to simple
+Karabiner-specific mappings such as device-specific modifier swaps.
+
+## Kanata Home-Row Mods
+
+The home-row mod config lives at:
+
+```bash
+~/.config/kanata/kanata.kbd
+```
+
+Test it manually before enabling it at login:
+
+```bash
+sudo /opt/homebrew/opt/kanata/bin/kanata --no-wait --cfg ~/.config/kanata/kanata.kbd
+```
+
+The config is scoped with `macos-dev-names-include` so it should only intercept
+the built-in Apple keyboard. If Kanata exits because it cannot find that device,
+list the exact names and update `macos-dev-names-include`:
+
+```bash
+/opt/homebrew/opt/kanata/bin/kanata --list
+```
+
+Validate config changes without starting the remapper:
+
+```bash
+/opt/homebrew/opt/kanata/bin/kanata --check --cfg ~/.config/kanata/kanata.kbd
+```
+
+The configured home-row holds are:
+
+- `a` / `;`: Shift
+- `s` / `l`: Command
+- `d` / `k`: Control
+- `f` / `j`: Option
+
+Same-hand rolls are biased toward taps so normal typing should keep letters.
+Deliberate modifier chords should be typed by holding the home-row key briefly
+before pressing the chord key. Once the timings feel right, start it at login:
+
+```bash
+sudo brew services start kanata
+```
 
 ## Mail Secrets
 
