@@ -8,6 +8,7 @@
   macos-dev-names-include ("Apple Internal Keyboard / Trackpad"))
 
 (defsrc
+  f1 f2 f7 f8 f9 f10 f11 f12
   a s d f j k l ;)
 
 (defvar
@@ -19,13 +20,14 @@
 (defalias
   a-shift (tap-hold-tap-keys $tap-ms $hold-ms a lsft $same-left)
   s-cmd   (tap-hold-tap-keys $tap-ms $hold-ms s lmet $same-left)
-  d-ctrl  (tap-hold-tap-keys $tap-ms $hold-ms d lctl $same-left)
-  f-alt   (tap-hold-tap-keys $tap-ms $hold-ms f lalt $same-left)
+  d-alt   (tap-hold-tap-keys $tap-ms $hold-ms d lalt $same-left)
+  f-ctrl  (tap-hold-tap-keys $tap-ms $hold-ms f lctl $same-left)
 
-  j-alt   (tap-hold-tap-keys $tap-ms $hold-ms j ralt $same-right)
-  k-ctrl  (tap-hold-tap-keys $tap-ms $hold-ms k rctl $same-right)
+  j-ctrl  (tap-hold-tap-keys $tap-ms $hold-ms j rctl $same-right)
+  k-alt   (tap-hold-tap-keys $tap-ms $hold-ms k ralt $same-right)
   l-cmd   (tap-hold-tap-keys $tap-ms $hold-ms l rmet $same-right)
   semi-shift (tap-hold-tap-keys $tap-ms $hold-ms ; rsft $same-right))
 
 (deflayer base
-  @a-shift @s-cmd @d-ctrl @f-alt @j-alt @k-ctrl @l-cmd @semi-shift)
+  brdn brup prev pp next mute vold volu
+  @a-shift @s-cmd @d-alt @f-ctrl @j-ctrl @k-alt @l-cmd @semi-shift)

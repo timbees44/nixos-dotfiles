@@ -161,6 +161,97 @@ EOF
   fi
 }
 
+kanata_virtualhid_driver_version() {
+  pkgutil --pkg-info "$KANATA_VIRTUALHID_PKG_ID" 2>/dev/null \
+    | awk -F': ' '$1 == "version" { print $2 }'
+}
+
+install_kanata_virtualhid_driver() {
+  local installed_version
+  local tmp_dir
+  local pkg_file
+
+  require_cmd curl
+  require_cmd pkgutil
+
+  installed_version="$(kanata_virtualhid_driver_version)"
+  if [[ "$installed_version" == "$KANATA_VIRTUALHID_VERSION" ]]; then
+    echo "Kanata VirtualHID driver ${KANATA_VIRTUALHID_VERSION} is already installed."
+  else
+    if [[ -n "$installed_version" ]]; then
+      echo "Kanata VirtualHID driver ${installed_version} is installed; replacing with ${KANATA_VIRTUALHID_VERSION}."
+    else
+      echo "Installing Kanata VirtualHID driver ${KANATA_VIRTUALHID_VERSION}."
+    fi
+
+    sudo -v
+    tmp_dir="$(mktemp -d)"
+    pkg_file="${tmp_dir}/Karabiner-DriverKit-VirtualHIDDevice-${KANATA_VIRTUALHID_VERSION}.pkg"
+
+    curl -fL --retry 3 -o "$pkg_file" "$KANATA_VIRTUALHID_PKG_URL"
+    sudo installer -pkg "$pkg_file" -target /
+    rm -rf "$tmp_dir"
+  fi
+
+  if [[ -x "$KANATA_VIRTUALHID_MANAGER" ]]; then
+    sudo "$KANATA_VIRTUALHID_MANAGER" forceActivate
+  else
+    echo "Missing VirtualHID manager after install: $KANATA_VIRTUALHID_MANAGER" >&2
+    exit 1
+  fi
+}
+
+start_kanata_service() {
+  if [[ ! -f "$HOME/.config/kanata/kanata.kbd" ]]; then
+    echo "Missing Kanata config: $HOME/.config/kanata/kanata.kbd" >&2
+    exit 1
+  fi
+
+  /opt/homebrew/opt/kanata/bin/kanata --check --cfg "$HOME/.config/kanata/kanata.kbd"
+  sudo brew services stop kanata >/dev/null 2>&1 || true
+  sudo brew services start kanata
+}
+
+install_corne_cmd_option_swap_agent() {
+  local label="com.tim.corne-cmd-option-swap"
+  local plist="${HOME}/Library/LaunchAgents/${label}.plist"
+  local script="${CONFIG_DIR}/scripts/corne-cmd-option-swap.sh"
+  local gui_domain="gui/$(id -u)"
+
+  require_file "$script"
+  chmod +x "$script"
+  mkdir -p "${HOME}/Library/LaunchAgents"
+
+  cat > "$plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>${label}</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>${script}</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StartInterval</key>
+  <integer>60</integer>
+  <key>StandardOutPath</key>
+  <string>/tmp/${label}.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/${label}.err.log</string>
+</dict>
+</plist>
+EOF
+
+  launchctl bootout "$gui_domain" "$plist" >/dev/null 2>&1 || true
+  launchctl bootstrap "$gui_domain" "$plist"
+  launchctl kickstart -k "${gui_domain}/${label}" >/dev/null 2>&1 || true
+}
+
 CORE_FORMULAE=(
   bat
   btop
@@ -203,9 +294,13 @@ UI_FORMULAE=(
 
 UI_CASKS=(
   aerospace
-  karabiner-elements
   skim
 )
+
+KANATA_VIRTUALHID_VERSION="6.2.0"
+KANATA_VIRTUALHID_PKG_ID="org.pqrs.Karabiner-DriverKit-VirtualHIDDevice"
+KANATA_VIRTUALHID_PKG_URL="https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases/download/v${KANATA_VIRTUALHID_VERSION}/Karabiner-DriverKit-VirtualHIDDevice-${KANATA_VIRTUALHID_VERSION}.pkg"
+KANATA_VIRTUALHID_MANAGER="/Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager"
 
 AGE_KEY_FILE="${AGE_KEY_FILE:-${HOME}/.config/age/keys.txt}"
 ISYNC_DIR="${HOME}/.config/isync"
@@ -275,6 +370,9 @@ run_bootstrap() {
 
     echo "Installing optional UI casks..."
     brew_install_cask_if_missing "${UI_CASKS[@]}"
+
+    echo "Installing Kanata macOS VirtualHID driver..."
+    install_kanata_virtualhid_driver
   fi
 
   echo "Linking shared config..."
@@ -298,9 +396,14 @@ run_bootstrap() {
   if [[ "$WITH_UI" -eq 1 ]]; then
     link_path "${CONFIG_DIR}/aerospace" "$HOME/.config/aerospace"
     link_path "${CONFIG_DIR}/kanata" "$HOME/.config/kanata"
-    link_path "${CONFIG_DIR}/karabiner" "$HOME/.config/karabiner"
     link_path "${CONFIG_DIR}/sketchybar" "$HOME/.config/sketchybar"
     link_path "${CONFIG_DIR}/walls/prometheus.png" "$HOME/pictures/walls/prometheus.png"
+
+    echo "Starting Kanata service..."
+    start_kanata_service
+
+    echo "Installing Corne Cmd/Option swap LaunchAgent..."
+    install_corne_cmd_option_swap_agent
   fi
 
   write_file "$HOME/.emacs" '(load-file (expand-file-name "~/.config/emacs/init.el"))'

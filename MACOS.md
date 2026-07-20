@@ -49,13 +49,12 @@ Optional `--with-ui` also links:
 
 - `~/.config/aerospace`
 - `~/.config/kanata`
-- `~/.config/karabiner`
 - `~/.config/sketchybar`
 - `~/pictures/walls/prometheus.png`
 
-It also installs the `kanata` formula and Karabiner Elements. Kanata uses the
-Karabiner driver on macOS, while `~/.config/karabiner` stays limited to simple
-Karabiner-specific mappings such as device-specific modifier swaps.
+It also installs the `kanata` formula, installs/activates the matching macOS
+VirtualHID driver, and starts the Kanata service. Kanata owns laptop keyboard
+behavior, and Corne behavior belongs in ZMK.
 
 ## Kanata Home-Row Mods
 
@@ -71,9 +70,24 @@ Test it manually before enabling it at login:
 sudo /opt/homebrew/opt/kanata/bin/kanata --no-wait --cfg ~/.config/kanata/kanata.kbd
 ```
 
+Kanata on macOS still needs Karabiner's standalone virtual HID output driver. The
+bootstrap script installs and activates `Karabiner-DriverKit-VirtualHIDDevice`
+`v6.2.0`, which matches Kanata 1.12.0. Do not install Karabiner Elements for this;
+the current v7 driver changed the DriverKit IPC protocol, which shows up as
+repeated `connect_failed asio.system:2` and `output backend unavailable` in
+Kanata logs.
+
+The package source is:
+
+```text
+https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases/tag/v6.2.0
+```
+
 The config is scoped with `macos-dev-names-include` so it should only intercept
-the built-in Apple keyboard. If Kanata exits because it cannot find that device,
-list the exact names and update `macos-dev-names-include`:
+the built-in Apple keyboard. Kanata still uses the Karabiner VirtualHID driver
+for output on macOS, but the virtual output keyboard should not be listed as an
+input device. If Kanata exits because it cannot find the built-in keyboard, list
+the exact names and update `macos-dev-names-include`:
 
 ```bash
 /opt/homebrew/opt/kanata/bin/kanata --list
@@ -89,8 +103,8 @@ The configured home-row holds are:
 
 - `a` / `;`: Shift
 - `s` / `l`: Command
-- `d` / `k`: Control
-- `f` / `j`: Option
+- `d` / `k`: Option
+- `f` / `j`: Control
 
 Same-hand rolls are biased toward taps so normal typing should keep letters.
 Deliberate modifier chords should be typed by holding the home-row key briefly
@@ -99,6 +113,19 @@ before pressing the chord key. Once the timings feel right, start it at login:
 ```bash
 sudo brew services start kanata
 ```
+
+## Corne Cmd/Option Swap
+
+The Corne-specific left Command/Option swap is handled outside Kanata with
+macOS `hidutil`, so the built-in Mac keyboard remains scoped to the Kanata
+home-row config above. The script targets only the Corne HID keyboard device:
+
+```bash
+config/scripts/corne-cmd-option-swap.sh
+```
+
+The bootstrap installs a user LaunchAgent that reapplies the mapping at login
+and once per minute, which covers Bluetooth reconnects.
 
 ## Mail Secrets
 
