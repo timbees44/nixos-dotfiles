@@ -1,12 +1,12 @@
-{ config, pkgs, lib, primaryUser, linuxHome, ... }:
-import ./common.nix {
-  inherit config pkgs lib primaryUser linuxHome;
+{ config, pkgs, ... }:
+{
+  imports = [ ./hyprland.nix ];
 
-  extraConfigs = {
+  my.dotfiles.extraConfigs = {
     foot = "foot";
   };
 
-  extraPackages = with pkgs; [
+  home.packages = with pkgs; [
     basedpyright
     bluez
     codex-acp
@@ -14,30 +14,13 @@ import ./common.nix {
     discord
     element-desktop
     foot
-<<<<<<< HEAD
-    fzf
-    gcc
-    gnumake
-    hypridle
-    hyprpaper
-    isync
-    jq
-    msmtp
-    neovim
-    nitch
-    nixpkgs-fmt
     ollama
-    pcmanfm
-=======
->>>>>>> 14eef96 (clean up)
     python3
     ruff
     wmenu
   ];
 
-  extraFiles = {
-    "pictures/walls/prometheus.png".source =
-      config.lib.file.mkOutOfStoreSymlink
-        "${config.home.homeDirectory}/projects/nixos-dotfiles/config/walls/prometheus.png";
-  };
+  home.file."pictures/walls/prometheus.png".source =
+    config.lib.file.mkOutOfStoreSymlink
+      "${config.my.dotfiles.root}/walls/prometheus.png";
 }

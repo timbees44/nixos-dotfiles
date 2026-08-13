@@ -1,14 +1,14 @@
-{ config, pkgs, lib, primaryUser, linuxHome, ... }:
-import ./common.nix {
-  inherit config pkgs lib primaryUser linuxHome;
+{ pkgs, lib, ... }:
+{
+  imports = [ ./hyprland.nix ];
 
-  extraConfigs = {
+  my.dotfiles.extraConfigs = {
     waybar = "waybar";
     wezterm = "wezterm";
     wofi = "wofi";
   };
 
-  extraPackages =
+  home.packages =
     (with pkgs; [
       mu
       waybar

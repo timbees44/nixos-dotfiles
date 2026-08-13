@@ -1,5 +1,5 @@
 {
-  description = "Hyprland on Nixos";
+  description = "NixOS hosts and shared dotfiles";
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
@@ -24,7 +24,14 @@
         agenix.nixosModules.default
         ./modules/shared
       ];
-      mkHost = { modules, primaryUser, linuxHome ? "/home/${primaryUser}", hmConfig ? null, system ? "x86_64-linux" }:
+      mkHost =
+        { modules
+        , primaryUser
+        , linuxHome ? "/home/${primaryUser}"
+        , dotfilesRoot ? "${linuxHome}/projects/nixos-dotfiles/config"
+        , hmConfig ? null
+        , system ? "x86_64-linux"
+        }:
         nixosSystem {
           inherit system;
           specialArgs = {
@@ -42,13 +49,14 @@
                   users.${primaryUser} = import hmConfig;
                   backupFileExtension = "backup";
                   extraSpecialArgs = {
-                    inherit primaryUser linuxHome;
+                    inherit primaryUser linuxHome dotfilesRoot;
                   };
                 };
               }
             ]);
         };
-    in {
+    in
+    {
       nixosConfigurations = {
         laptop = mkHost {
           primaryUser = "tim";

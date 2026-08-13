@@ -1,87 +1,18 @@
-{ config, lib, pkgs, primaryUser, ... }:
+{ config, lib, pkgs, ... }:
 with lib;
 let
   cfg = config.services.homelab;
   hasFrigateSecret = config.age.secrets ? frigate-reolink-env;
-  fqdn = sub: "${sub}.${cfg.domain}";
-  proxyBlock = port: extra: ''
-    tls internal
-    reverse_proxy ${cfg.proxyAddress}:${toString port}${extra}
-  '';
-  proxyWithBlock = port: lines: proxyBlock port '' {
-${lines}
-    }
-  '';
   calibreConfigDir = "/var/lib/calibre-web-automated";
   ensureDir = path: owner: group: mode: "d '${path}' ${mode} ${owner} ${group} - -";
   mediaSubdirRule = name: ensureDir "${cfg.mediaDir}/${name}" cfg.user "media" "0755";
-  simpleProxy = port: { extraConfig = proxyBlock port ""; };
   dnsAddr = "${cfg.serviceAddress}";
-  caddyVirtualHosts = {
-    "${fqdn "jellyfin"}" = simpleProxy 8096;
-    "${fqdn "audiobookshelf"}" = simpleProxy 13378;
-    "${fqdn "calibre"}" = simpleProxy 8083;
-    "${fqdn "frigate"}" = simpleProxy 5000;
-    "${fqdn "homeassistant"}" = {
-      extraConfig = proxyWithBlock 8123 ''
-      header_up Host {host}
-      header_up X-Forwarded-For {remote_host}
-      header_up X-Forwarded-Proto {scheme}
-    '';
-    };
-    "${fqdn "immich"}" = {
-      extraConfig = proxyWithBlock 2283 ''
-      header_up X-Forwarded-For {remote_host}
-      header_up X-Forwarded-Proto {scheme}
-    '';
-    };
-    "${fqdn "syncthing"}" = {
-      extraConfig = proxyWithBlock 8384 ''
-      header_up Host localhost:8384
-      header_up X-Forwarded-Host {host}
-    '';
-    };
-  };
-in {
-  options.services.homelab = {
-    enable = mkEnableOption "Enable the media + storage homelab stack";
-
-    user = mkOption {
-      type = types.str;
-      default = primaryUser;
-      description = "User that owns the media data and services.";
-    };
-
-    domain = mkOption {
-      type = types.str;
-      default = "lan";
-      description = "Domain suffix for reverse proxy hostnames (e.g. jellyfin.<domain>).";
-    };
-
-    mediaDir = mkOption {
-      type = types.str;
-      default = "/srv/media";
-      description = "Base directory holding media libraries.";
-    };
-
-    timezone = mkOption {
-      type = types.str;
-      default = "UTC";
-      description = "Timezone used by containers and services that need it.";
-    };
-
-    serviceAddress = mkOption {
-      type = types.str;
-      default = "127.0.0.1";
-      description = "Address services bind to (set to 0.0.0.0 for LAN access).";
-    };
-
-    proxyAddress = mkOption {
-      type = types.str;
-      default = "127.0.0.1";
-      description = "Address Caddy should use when proxying to services.";
-    };
-  };
+in
+{
+  imports = [
+    ./options.nix
+    ./proxy.nix
+  ];
 
   config = mkIf cfg.enable {
     assertions = [
@@ -297,11 +228,6 @@ in {
       '';
     };
 
-    services.caddy = {
-      enable = true;
-      virtualHosts = caddyVirtualHosts;
-    };
-
     systemd.tmpfiles.rules = [
       "f /var/lib/hass/automations.yaml 0600 hass hass -"
       "f /var/lib/hass/scripts.yaml 0600 hass hass -"
@@ -376,9 +302,6 @@ in {
       install -d -m 0755 ${cfg.mediaDir}/security/frigate/config
       install -m 0644 /etc/frigate/config.yaml ${cfg.mediaDir}/security/frigate/config/config.yaml
     '';
-
-    networking.firewall.allowedTCPPorts = mkBefore [ 80 443 ];
-
 
   };
 }

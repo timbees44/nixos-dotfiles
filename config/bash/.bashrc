@@ -10,6 +10,9 @@ HISTFILESIZE="${HISTSIZE}"
 # Ensure command hashing is off for mise
 set +h
 
+# Set nix path
+. /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+
 # Environment
 export SUDO_EDITOR="$EDITOR"
 export BAT_THEME=ansi
@@ -36,7 +39,7 @@ if command -v eza &> /dev/null; then
 fi
 
 alias ff="fzf --preview 'bat --style=numbers --color=always {}'"
-alias nrl='sudo nixos-rebuild switch --flake ~/nixos-dotfiles#laptop'
+alias nrl='sudo nixos-rebuild switch --flake ~/projects/nixos-dotfiles#laptop'
 alias vi='nvim'
 alias vim='nvim'
 

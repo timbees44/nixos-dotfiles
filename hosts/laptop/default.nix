@@ -1,70 +1,22 @@
-{ config, lib, pkgs, primaryUser, ... }:
+{ pkgs, ... }:
 {
-  imports =
-    [
-      ./hardware-configuration.nix
-      ../../modules/shared/mail-secrets.nix
-    ];
+  imports = [
+    ./hardware-configuration.nix
+    ../../modules/shared/mail-secrets.nix
+    ../../modules/nixos/profiles/hyprland.nix
+    ../../modules/nixos/profiles/workstation.nix
+  ];
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking.hostName = "nixos";
-  networking.networkmanager = {
-    enable = true;
-    wifi = {
-      powersave = false;
-      backend = "wpa_supplicant";
-    };
-  };
-
-  time.timeZone = "Europe/London";
-
   services.xserver.enable = true;
   services.displayManager.sddm = {
     enable = true;
     wayland.enable = true;
   };
   services.displayManager.defaultSession = "hyprland-uwsm";
-  services.mullvad-vpn = {
-    enable = true;
-    package = pkgs.mullvad-vpn;
-  };
-  services.udisks2.enable = true;
-  services.gvfs.enable = true;
-
-  programs.hyprland = {
-    enable = true;
-    xwayland.enable = true;
-    withUWSM = true;
-  };
-
-  security.polkit.enable = true;
-
-  hardware.bluetooth = {
-    enable = true;
-    powerOnBoot = true;
-  };
-
-  users.users.${primaryUser} = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager" ];
-  };
-
-  environment.systemPackages = with pkgs; [
-    vim
-    git
-    wget
-    cmake
-    gnumake
-    gcc
-    gparted
-    pkg-config
-    libtool
-    unzip
-    gnutar
-  ];
-
   powerManagement = {
     enable = true;
     powertop.enable = true;
@@ -151,12 +103,6 @@
       esac
     '';
   };
-
-  fonts.packages = with pkgs; [
-    nerd-fonts.jetbrains-mono
-  ];
-
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   system.stateVersion = "24.05";
 

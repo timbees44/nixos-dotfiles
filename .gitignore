@@ -3,3 +3,7 @@ AGENTS.md
 SSD_SETUP.md
 .codex
 /.agent-shell/
+
+# Editor/build artifacts
+*.bak
+*.elc

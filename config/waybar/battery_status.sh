@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Find the first battery exposed by the kernel
+# Find the first battery exposed by the kernel. Battery names are not
+# necessarily BAT0/BAT1 (Apple hardware, for example, uses macsmc-battery).
 battery_dir=""
-for candidate in /sys/class/power_supply/BAT*; do
-    if [ -d "$candidate" ]; then
+for candidate in /sys/class/power_supply/*; do
+    if [ -d "$candidate" ] \
+        && [ -r "$candidate/type" ] \
+        && [ "$(cat "$candidate/type")" = "Battery" ]; then
         battery_dir="$candidate"
         break
     fi
